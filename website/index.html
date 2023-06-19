@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>DexTop</title>
+    <meta name="description" content="DexTop - Real-time Dexcom blood sugars on your desktop" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body>
+    <div class="w-screen h-screen relative overflow-hidden">
+      <div class="top-0 bottom-0 left-0 right-0 absolute -z-10">
+        <picture>
+          <source srcset="/images/wallpaper.webp" type="image/webp">
+          <source srcset="/images/ballpaper.png" type="image/jpeg">
+          <img alt="Colored wallpaper" src="/images/wallpaper.png" class="object-center object-cover h-full w-full" />
+        </picture>
+      </div>
+      <div class="hidden md:block">
+        <div class="flex px-5 items-center justify-between w-screen h-10 bg-gray-100 bg-opacity-20">
+          <div class="flex gap-5 items-center text-sm">
+            <p class="opacity-40">
+              <picture>
+                <source srcset="/images/apple.webp" type="image/webp">
+                <source srcset="/images/apple.png" type="image/jpeg">
+                <img alt="Apple logo" src="/images/apple.png" class="h-4" />
+              </picture>
+            </p>
+            <p class="font-bold opacity-40">DexTop</p>
+            <p class="opacity-40">File</p>
+            <p class="opacity-40">Edit</p>
+            <p class="opacity-40">View</p>
+            <p class="opacity-40">History</p>
+            <p class="opacity-40">Bookmarks</p>
+            <p class="opacity-40">Develop</p>
+            <p class="opacity-40">Window</p>
+            <p class="opacity-40">Help</p>
+          </div>
+
+          <div class="flex gap-5 items-center">
+            <p id="DexTopDesktop" class="DexTop animate-bounce text-xl"></p>
+            <p class="opacity-40 text-sm">Mon 10 Jun 10:30</p>
+          </div>
+        </div>
+
+        <div id="DesktopPopup" class="bg-white bg-opacity-80 w-52 absolute p-5 rounded hidden">
+          <p>Real-time Dexcom blood sugars on your desktop.</p>
+
+          <a href="#" class="flex flex-row items-center gap-2 mt-8">
+            <picture>
+              <source srcset="/images/apple.webp" type="image/webp">
+              <source srcset="/images/apple.png" type="image/jpeg">
+              <img alt="Apple logo" src="/images/apple.png" class="h-4" />
+            </picture>
+            <span class="underline">DexTop for macOS</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="block md:hidden flex flex-col items-center">
+        <div class="flex px-5 items-center justify-center w-screen h-16 bg-gray-100 bg-opacity-20">
+          <p id="DexTopMobile" class="DexTop animate-bounce text-2xl"></p>
+        </div>
+
+        <div id="MobilePopup" class="bg-white bg-opacity-80 w-52 p-5 rounded mt-2 hidden">
+          <p>Real-time Dexcom blood sugars on your desktop.</p>
+
+          <a href="#" class="flex flex-row items-center gap-2 mt-8">
+            <picture>
+              <source srcset="/images/apple.webp" type="image/webp">
+              <source srcset="/images/apple.png" type="image/jpeg">
+              <img alt="Apple logo" src="/images/apple.png" class="h-4" />
+            </picture>
+            <span class="underline">DexTop for macOS</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const dexTops = Array.from(document.querySelectorAll(".DexTop"));
+      const dexTopDesktop = document.querySelector("#DexTopDesktop");
+      const dexTopMobile = document.querySelector("#DexTopMobile");
+      const desktopPopup = document.querySelector("#DesktopPopup");
+      const mobilePopup = document.querySelector("#MobilePopup");
+
+      const VALUES = [
+        "83 →", "87 ↗", "80 ↘"
+      ];
+      let i = 0;
+      const update = () => {
+        dexTops.forEach(dexTop => dexTop.innerText = VALUES[i]);
+        i = (i + 1) % VALUES.length;
+      }
+      update();
+      setInterval(update, 5000);
+
+      const showAndPositionPopup = () => {
+        dexTopDesktop.classList.remove("animate-bounce");
+        desktopPopup.classList.remove("hidden");
+        const dt = dexTopDesktop.getBoundingClientRect();
+        desktopPopup.style.top = `${dt.bottom + 15}px`;
+        desktopPopup.style.left = `${dt.left - desktopPopup.getBoundingClientRect().width/2}px`;
+      }
+
+      const showPopup = () => {
+        dexTopMobile.classList.remove("animate-bounce");
+        mobilePopup.classList.remove("hidden");
+      }
+
+      dexTopDesktop.addEventListener("mouseenter", showAndPositionPopup, { passive: true });
+      dexTopDesktop.addEventListener("touchstart", showAndPositionPopup, { passive: true });
+      dexTopMobile.addEventListener("mouseenter", showPopup, { passive: true });
+      dexTopMobile.addEventListener("touchstart", showPopup, { passive: true });
+    </script>
+  </body>
+</html>

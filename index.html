@@ -2,20 +2,33 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <meta
-      http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <title>Hello from Electron renderer!</title>
+    <title>DexTop</title>
   </head>
-  <body>
-    <h1>Hello from Electron renderer!</h1>
-    <p>👋</p>
-    <p id="info"></p>
+
+  <body style="padding: 10px 10px;">
+    <form>
+      <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; height: 30px;">
+        <label for="email" style="width: 60px;">Email</label>
+        <input required type="email" id="email" name="email" style="flex: 1" />
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; height: 30px;">
+        <label for="password" style="width: 60px;">Password</label>
+        <input required type="password" id="password" name="password" style="flex: 1" />
+      </div>
+
+      <p style="margin-top: 10px; font-size: 0.8rem;">
+        (Your credentials are only used to log into Dexcom's servers)
+      </p>
+
+      <div style="display: flex; justify-content: center; margin-top: 25px; height: 30px;">
+        <button type="submit" id="submit" style="width: 100px;">Start</button>
+      </div>
+
+      <p id="error" style="margin-top: 10px; color: red; text-align: center;">
+      </p>
+    </form>
+
+    <script src="./renderer.js"></script>
   </body>
-  <script src="./renderer.js"></script>
 </html>
