@@ -1,13 +1,15 @@
 {
-  "name": "dex",
-  "version": "1.0.0",
+  "name": "DexTop",
+  "version": "0.1.0",
   "description": "",
   "main": "main.js",
+  "repository": "github:3v0k4/dextop",
   "scripts": {
-    "start": "electron-forge start",
+    "start": "tsc && electron-forge start",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "package": "electron-forge package",
-    "make": "electron-forge make"
+    "package": "tsc && electron-forge package",
+    "make": "tsc && electron-forge make",
+    "publish": "tsc && electron-forge publish"
   },
   "author": "",
   "license": "ISC",
@@ -18,9 +20,14 @@
     "@electron-forge/maker-squirrel": "^6.2.1",
     "@electron-forge/maker-zip": "^6.2.1",
     "@electron-forge/plugin-auto-unpack-natives": "^6.2.1",
-    "electron": "^25.1.1"
+    "@electron-forge/publisher-github": "^6.2.1",
+    "electron": "^25.1.1",
+    "typescript": "^5.1.3"
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0"
+    "auto-launch": "^5.0.6",
+    "electron-positioner": "^4.1.0",
+    "electron-squirrel-startup": "^1.0.0",
+    "update-electron-app": "^2.0.1"
   }
 }

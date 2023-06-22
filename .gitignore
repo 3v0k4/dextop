@@ -1,3 +1,7 @@
 node_modules/
-
 out/
+dist/
+*.js
+*.js.map
+!.config.js
+.DS_Store
