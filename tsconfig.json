@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "allowJs": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "baseUrl": ".",
@@ -8,6 +9,7 @@
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
     "module": "commonjs",
+    "moduleResolution": "node",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -15,22 +17,19 @@
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "outDir": ".",
-    "paths": {
-      "*": ["node_modules/*"]
-    },
+    "outDir": "dist",
+    "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
-    "strict": true
+    "strict": true,
+    "target": "ES6",
+    "paths": {
+      "*": ["node_modules/*"]
+    }
   },
-  "include": [
-    "**/*.ts"
-  ],
   "exclude": [
     "node_modules",
     "cdk"
   ],
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Strictest",
-  "_version": "2.0.0"
+  "include": ["src/**/*"]
 }
