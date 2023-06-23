@@ -89,6 +89,10 @@ const menuTemplate = (
   const DEFAULT: MenuItemConstructorOptions[] = [
     { label: "Preferences", click: showPreferences },
     {
+      label: "Donate",
+      click: () => shell.openExternal("http://tips.dextop.odone.io"),
+    },
+    {
       label: "Contact",
       click: () => shell.openExternal("http://contact.dextop.odone.io"),
     },
