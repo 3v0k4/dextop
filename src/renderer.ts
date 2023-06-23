@@ -7,8 +7,8 @@ const submit = document.querySelector("#submit");
 if (!(submit instanceof HTMLButtonElement))
   throw new Error("Submit button not found");
 
-const email = document.querySelector("#email");
-if (!(email instanceof HTMLInputElement))
+const emailInput = document.querySelector("#email");
+if (!(emailInput instanceof HTMLInputElement))
   throw new Error("Email input not found");
 
 const password = document.querySelector("#password");
@@ -45,5 +45,9 @@ window.versions.onStartResponse((_, response) => {
   }
 });
 
-email.value = window.versions.state.email;
+emailInput.value = window.versions.state.email;
 password.value = window.versions.state.password;
+
+window.versions.onCredentials((_, { email }) => {
+  emailInput.value = email;
+});

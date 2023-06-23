@@ -9,5 +9,7 @@ contextBridge.exposeInMainWorld("versions", {
     ipcRenderer.invoke("start", credentials),
   onStartResponse: (callback: Parameters<typeof ipcRenderer.on>[1]) =>
     ipcRenderer.on("startResponseReceived", callback),
+  onCredentials: (callback: Parameters<typeof ipcRenderer.on>[1]) =>
+    ipcRenderer.on("retrievedCredentials", callback),
   state: JSON.parse(state),
 });

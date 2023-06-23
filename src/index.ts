@@ -112,6 +112,17 @@ const showPreferences = () => {
   });
 
   preferences.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+  if (state.email === "") {
+    preferences.webContents
+      .executeJavaScript("localStorage.getItem('email')")
+      .then((email) => {
+        if (!email) {
+          return;
+        }
+        state = { ...state, email };
+        preferences.webContents.send("retrievedCredentials", { email });
+      });
+  }
 
   const positioner = new Positioner(preferences);
   const { x, y } = positioner.calculate("trayCenter", tray.getBounds());
@@ -145,6 +156,9 @@ const start = async (_: unknown, credentials: Credentials) => {
       loopId = setInterval(() => start_(credentials), 1000 * 60);
       hide();
       preferences.webContents.send("startResponseReceived", response);
+      preferences.webContents.executeJavaScript(
+        `localStorage.setItem('email', '${credentials.email}')`
+      );
       return;
     case "wrong-credentials":
       preferences.webContents.send("startResponseReceived", response);
