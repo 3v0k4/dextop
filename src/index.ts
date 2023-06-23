@@ -38,7 +38,7 @@ export type Event =
   | { _kind: "wrong-credentials" }
   | { _kind: "error" };
 
-type Entry = {
+type Glucose = {
   timestamp: string;
   value: number | null;
   trend: string;
@@ -240,7 +240,7 @@ const start_ = async (session: Session): Promise<Event> => {
 
 const getGlucose = async (
   session: Session
-): Promise<Response<Entry> | { _kind: "no-glucose-in-5-minutes" }> => {
+): Promise<Response<Glucose> | { _kind: "no-glucose-in-5-minutes" }> => {
   const { email, password, region } = session;
   if (region === "") return { _kind: "fail" };
   const accountId = await getAccountId({ email, password, host: host(region) });
@@ -332,7 +332,7 @@ const getSessionId = async ({
 
 const getEstimatedGlucoseValues = async (
   sessionId: string
-): Promise<Entry[]> => {
+): Promise<Glucose[]> => {
   const body = {
     maxCount: 1,
     minutes: 6,
@@ -361,12 +361,12 @@ const getEstimatedGlucoseValues = async (
   const notNull = <T>(x: T | null): x is T => x !== null;
 
   return data
-    .map((entry) => {
-      const timestamp = convertToLocalTime(entry.DT);
+    .map((glucose) => {
+      const timestamp = convertToLocalTime(glucose.DT);
       if (!timestamp) return null;
       return {
-        value: entry.Value,
-        trend: entry.Trend,
+        value: glucose.Value,
+        trend: glucose.Trend,
         timestamp: timestamp,
       };
     })
