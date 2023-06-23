@@ -5,11 +5,11 @@ const state = process.argv.at(-1);
 if (state === undefined) throw new Error("State not found");
 
 contextBridge.exposeInMainWorld("versions", {
-  start: (credentials: { email: string; password: string }) =>
-    ipcRenderer.invoke("start", credentials),
+  start: (session: import("./index").Session) =>
+    ipcRenderer.invoke("start", session),
   onStartResponse: (callback: Parameters<typeof ipcRenderer.on>[1]) =>
     ipcRenderer.on("startResponseReceived", callback),
-  onCredentials: (callback: Parameters<typeof ipcRenderer.on>[1]) =>
-    ipcRenderer.on("retrievedCredentials", callback),
+  onSession: (callback: Parameters<typeof ipcRenderer.on>[1]) =>
+    ipcRenderer.on("retrievedSession", callback),
   state: JSON.parse(state),
 });

@@ -1,18 +1,18 @@
-type Credentials = import("./main").Credentials;
+type Session = import("./index").Session;
 
 type OnStartResponseListener = (
   _: IpcRendererEvent,
-  _: import("./main").Event
+  _: import("./index").Event
 ) => void;
-type OnCredentialsListener = (_: IpcRendererEvent, _: Credentials) => void;
+type OnSessionListener = (_: IpcRendererEvent, _: Session) => void;
 
 declare global {
   interface Window {
     versions: {
-      start: (Credentials) => Promise<void>;
+      start: (_: Session) => Promise<void>;
       onStartResponse: (_: OnStartResponseListener) => void;
-      state: Credentials;
-      onCredentials: (_: OnCredentialsListener) => void;
+      state: Session;
+      onSession: (_: OnSessionListener) => void;
     };
   }
 }

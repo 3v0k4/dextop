@@ -26,7 +26,13 @@ if (require("electron-squirrel-startup")) {
   app.quit();
 }
 
-export type Credentials = { email: string; password: string };
+type Region = "us" | "eu" | "";
+export type Session = {
+  email: string;
+  password: string;
+  region: Region;
+};
+
 export type Event =
   | { _kind: "ok" }
   | { _kind: "wrong-credentials" }
@@ -46,9 +52,9 @@ type Response<T = unknown> =
 
 let tray: Tray;
 let preferences: BrowserWindow;
-let state: Credentials = { email: "", password: "" };
+let state: Session = { email: "", password: "", region: "" };
 let loopId: ReturnType<typeof setInterval>;
-let isAppQuitting: boolean = false;
+let isAppQuitting = false;
 
 app.dock.hide();
 
@@ -111,7 +117,7 @@ const showPreferences = () => {
   preferences = new BrowserWindow({
     icon: "src/images/icon.png",
     width: 350,
-    height: 260,
+    height: 300,
     movable: false,
     minimizable: false,
     maximizable: false,
@@ -126,13 +132,14 @@ const showPreferences = () => {
   preferences.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
   if (state.email === "") {
     preferences.webContents
-      .executeJavaScript("localStorage.getItem('email')")
-      .then((email) => {
-        if (!email) {
+      .executeJavaScript("localStorage.getItem('session')")
+      .then((sessionString) => {
+        if (!sessionString) {
           return;
         }
-        state = { ...state, email };
-        preferences.webContents.send("retrievedCredentials", { email });
+        const session = JSON.parse(sessionString);
+        state = { ...state, ...session };
+        preferences.webContents.send("retrievedSession", session);
       });
   }
 
@@ -162,18 +169,21 @@ const hide = (event?: Electron.Event) => {
   isAppQuitting = false;
 };
 
-const start = async (_: unknown, credentials: Credentials) => {
+const start = async (_: unknown, session: Session) => {
   if (loopId) {
     clearInterval(loopId);
   }
-  const response = await start_(credentials);
+  const response = await start_(session);
   switch (response._kind) {
     case "ok":
-      loopId = setInterval(() => start_(credentials), 1000 * 60);
+      loopId = setInterval(() => start_(session), 1000 * 60);
       hide();
       preferences.webContents.send("startResponseReceived", response);
       preferences.webContents.executeJavaScript(
-        `localStorage.setItem('email', '${credentials.email}')`
+        `localStorage.setItem('session', '${JSON.stringify({
+          email: session.email,
+          region: session.region,
+        })}')`
       );
       return;
     case "wrong-credentials":
@@ -185,16 +195,15 @@ const start = async (_: unknown, credentials: Credentials) => {
   }
 };
 
-const start_ = async (credentials: Credentials): Promise<Event> => {
-  const { email, password } = credentials;
-  const glucose = await getGlucose(email, password);
+const start_ = async (session: Session): Promise<Event> => {
+  const glucose = await getGlucose(session);
   switch (glucose._kind) {
     case "ok": {
       const contextMenu = Menu.buildFromTemplate(
         menuTemplate(`Last glucose at ${glucose.data.timestamp}`)
       );
       tray.setContextMenu(contextMenu);
-      state = { ...state, ...credentials };
+      state = { ...state, ...session };
       // const RED_FG = '\033[31;1m';
       // const RED_BG = '\033[41;1m';
       tray.setTitle(`${glucose.data.value} ${trendToIcon(glucose.data.trend)}`);
@@ -230,12 +239,17 @@ const start_ = async (credentials: Credentials): Promise<Event> => {
 };
 
 const getGlucose = async (
-  email: string,
-  password: string
+  session: Session
 ): Promise<Response<Entry> | { _kind: "no-glucose-in-5-minutes" }> => {
-  const accountId = await getAccountId(email, password);
+  const { email, password, region } = session;
+  if (region === "") return { _kind: "fail" };
+  const accountId = await getAccountId({ email, password, host: host(region) });
   if (accountId._kind !== "ok") return accountId;
-  const sessionId = await getSessionId(accountId.data, password);
+  const sessionId = await getSessionId({
+    accountId: accountId.data,
+    password,
+    host: host(region),
+  });
   if (!sessionId) return { _kind: "fail" };
   const [glucose] = await getEstimatedGlucoseValues(sessionId);
   return glucose
@@ -266,17 +280,21 @@ const trendToIcon = (trend: string) => {
 
 const DEXCOM_APPLICATION_ID = "d89443d2-327c-4a6f-89e5-496bbb0317db";
 
-const getAccountId = async (
-  accountName: string,
-  password: string
-): Promise<Response<string>> => {
+const getAccountId = async ({
+  email,
+  password,
+  host,
+}: {
+  email: string;
+  password: string;
+  host: string;
+}): Promise<Response<string>> => {
   const body = {
-    accountName,
+    accountName: email,
     password,
     applicationId: DEXCOM_APPLICATION_ID,
   };
-  const url =
-    "https://shareous1.dexcom.com/ShareWebServices/Services/General/AuthenticatePublisherAccount";
+  const url = `https://${host}/ShareWebServices/Services/General/AuthenticatePublisherAccount`;
   const response = await post(body, url);
   if (response._kind !== "ok") {
     return response;
@@ -284,17 +302,21 @@ const getAccountId = async (
   return { _kind: "ok", data: response.data as string };
 };
 
-const getSessionId = async (
-  accountId: string,
-  password: string
-): Promise<string | null> => {
+const getSessionId = async ({
+  accountId,
+  password,
+  host,
+}: {
+  accountId: string;
+  password: string;
+  host: string;
+}): Promise<string | null> => {
   const body = {
     accountId,
     password,
     applicationId: DEXCOM_APPLICATION_ID,
   };
-  const url =
-    "https://shareous1.dexcom.com/ShareWebServices/Services/General/LoginPublisherAccountById";
+  const url = `https://${host}/ShareWebServices/Services/General/LoginPublisherAccountById`;
   const response = await post(body, url);
   switch (response._kind) {
     case "ok":
@@ -385,4 +407,13 @@ const convertToLocalTime = (dt: string): string | null => {
   const local = new Date(iso).toISOString().slice(0, -1) + `${sign}${offset}`;
   const [_3, timestamp] = local.match(/.+T(\d\d:\d\d):.+/) || [];
   return timestamp || null;
+};
+
+const host = (region: Exclude<Region, "">): string => {
+  switch (region) {
+    case "us":
+      return "share2.dexcom.com";
+    case "eu":
+      return "shareous1.dexcom.com";
+  }
 };
