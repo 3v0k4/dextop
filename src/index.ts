@@ -79,7 +79,7 @@ app.whenReady().then(() => {
   autoLaunch.isEnabled().then((isEnabled: boolean) => {
     if (isEnabled) return;
 
-    dialog
+    return dialog
       .showMessageBox({
         title: "DexTop",
         message:
