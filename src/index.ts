@@ -7,6 +7,7 @@ import {
   ipcMain,
   MenuItemConstructorOptions,
   dialog,
+  shell,
 } from "electron";
 const Positioner = require("electron-positioner");
 const AutoLaunch = require("auto-launch");
@@ -87,6 +88,10 @@ const menuTemplate = (
 ): Parameters<typeof Menu.buildFromTemplate>[0] => {
   const DEFAULT: MenuItemConstructorOptions[] = [
     { label: "Preferences", click: showPreferences },
+    {
+      label: "Contact",
+      click: () => shell.openExternal("http://contact.dextop.odone.io"),
+    },
     { type: "separator" },
     { role: "quit" },
   ];
