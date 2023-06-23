@@ -4,7 +4,8 @@ set -e
 
 cd cdk
 npm install
-npx --package=aws-cdk cdk deploy
+npm run build
+npm run cdk deploy
 cd -
 
 cd website
