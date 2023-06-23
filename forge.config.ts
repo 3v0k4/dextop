@@ -10,30 +10,41 @@ import { WebpackPlugin } from "@electron-forge/plugin-webpack";
 import { mainConfig } from "./webpack.main.config";
 import { rendererConfig } from "./webpack.renderer.config";
 
+const appleId = process.env["APPLE_ID"];
+const appleIdPassword = process.env["APPLE_PASSWORD"];
+const teamId = process.env["APPLE_TEAM_ID"];
+const credentials = appleId && appleIdPassword && teamId;
+
 const config: ForgeConfig = {
-  publishers: [
-    {
-      name: "@electron-forge/publisher-github",
-      config: {
-        repository: {
-          owner: "3v0k4",
-          name: "dextop",
+  publishers: credentials
+    ? [
+        {
+          name: "@electron-forge/publisher-github",
+          config: {
+            repository: {
+              owner: "3v0k4",
+              name: "dextop",
+            },
+            prerelease: false,
+            draft: false,
+          },
         },
-        prerelease: false,
-        draft: false,
-      },
-    },
-  ],
+      ]
+    : [],
   packagerConfig: {
     icon: "src/images/icon",
     asar: true,
-    osxSign: {},
-    osxNotarize: {
-      tool: "notarytool",
-      appleId: process.env["APPLE_ID"]!,
-      appleIdPassword: process.env["APPLE_PASSWORD"]!,
-      teamId: process.env["APPLE_TEAM_ID"]!,
-    },
+    ...(credentials ? { osxSign: {} } : {}),
+    ...(credentials
+      ? {
+          osxNotarize: {
+            tool: "notarytool",
+            appleId,
+            appleIdPassword,
+            teamId,
+          },
+        }
+      : {}),
   },
   rebuildConfig: {},
   makers: [
