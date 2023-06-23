@@ -48,6 +48,7 @@ let tray: Tray;
 let preferences: BrowserWindow;
 let state: Credentials = { email: "", password: "" };
 let loopId: ReturnType<typeof setInterval>;
+let isAppQuitting: boolean = false;
 
 app.dock.hide();
 
@@ -143,11 +144,14 @@ const showPreferences = () => {
     preferences.show();
   });
 
+  app.on("before-quit", () => {
+    isAppQuitting = true;
+  });
   preferences.on("close", hide);
 };
 
 const hide = (event?: Electron.Event) => {
-  if (event) {
+  if (event && !isAppQuitting) {
     event.preventDefault();
   }
   if (!preferences) {
@@ -155,6 +159,7 @@ const hide = (event?: Electron.Event) => {
   }
   preferences.removeListener("close", hide);
   preferences.hide();
+  isAppQuitting = false;
 };
 
 const start = async (_: unknown, credentials: Credentials) => {
