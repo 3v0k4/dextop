@@ -154,8 +154,9 @@
       dexTopMobile.addEventListener("touchstart", showPopup, { passive: true });
 
       fetch('https://api.github.com/repos/3v0k4/dextop/releases/latest')
-        .then(x => x.json())
-        .then(json => links.forEach(link => link.href = json.assets[0].browser_download_url));
+        .then(response => response.json())
+        .then(json => json.assets.filter(asset => asset.content_type === "application/x-apple-diskimage")[0].browser_download_url)
+        .then(url => links.forEach(link => link.href = url));
     </script>
   </body>
 </html>
