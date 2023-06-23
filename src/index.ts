@@ -103,6 +103,7 @@ const menuTemplate = (
 
 const showPreferences = () => {
   preferences = new BrowserWindow({
+    icon: "src/images/icon.png",
     width: 350,
     height: 260,
     movable: false,

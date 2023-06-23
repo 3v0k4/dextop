@@ -3,6 +3,7 @@ import { MakerSquirrel } from "@electron-forge/maker-squirrel";
 import { MakerZIP } from "@electron-forge/maker-zip";
 import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerRpm } from "@electron-forge/maker-rpm";
+import { MakerDMG } from "@electron-forge/maker-dmg";
 import { AutoUnpackNativesPlugin } from "@electron-forge/plugin-auto-unpack-natives";
 import { WebpackPlugin } from "@electron-forge/plugin-webpack";
 
@@ -24,6 +25,7 @@ const config: ForgeConfig = {
     },
   ],
   packagerConfig: {
+    icon: "src/images/icon",
     asar: true,
     osxSign: {},
     osxNotarize: {
@@ -35,10 +37,33 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {},
   makers: [
-    new MakerSquirrel({}),
+    // Windows
+    new MakerSquirrel({
+      iconUrl: "https://dextop.odone.io/images/icon.ico",
+      setupIcon: "src/images/icon.ico",
+    }),
+
+    // Any platform
     new MakerZIP({}, ["darwin"]),
-    new MakerRpm({}),
-    new MakerDeb({}),
+
+    // macOS
+    new MakerDMG({
+      icon: "src/images/icon.icns",
+    }),
+
+    // RedHat-based Linux distributions
+    new MakerRpm({
+      options: {
+        icon: "src/images/icon.png",
+      },
+    }),
+
+    // Debian-based Linux distributions
+    new MakerDeb({
+      options: {
+        icon: "src/images/icon.png",
+      },
+    }),
   ],
   plugins: [
     new AutoUnpackNativesPlugin({}),
