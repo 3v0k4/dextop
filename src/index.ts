@@ -1,13 +1,14 @@
 import {
-  app,
-  Tray,
-  Menu,
-  nativeImage,
   BrowserWindow,
-  ipcMain,
+  Menu,
   MenuItemConstructorOptions,
+  Tray,
+  app,
   dialog,
+  ipcMain,
+  nativeImage,
   shell,
+  session,
 } from "electron";
 import Positioner from "electron-positioner";
 import AutoLaunch from "auto-launch";
@@ -130,18 +131,17 @@ const showPreferences = () => {
   });
 
   preferences.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
-  if (state.email === "") {
-    preferences.webContents
-      .executeJavaScript("localStorage.getItem('session')")
-      .then((sessionString) => {
-        if (!sessionString) {
-          return;
-        }
-        const session = JSON.parse(sessionString);
-        state = { ...state, ...session };
-        preferences.webContents.send("retrievedSession", session);
-      });
-  }
+
+  preferences.webContents
+    .executeJavaScript("localStorage.getItem('session')")
+    .then((sessionString) => {
+      if (!sessionString) {
+        return;
+      }
+      const session = JSON.parse(sessionString);
+      state = { ...state, ...session };
+      preferences.webContents.send("retrievedSession", session);
+    });
 
   const positioner = new Positioner(preferences);
   const { x, y } = positioner.calculate("trayCenter", tray.getBounds());
