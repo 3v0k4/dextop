@@ -122,20 +122,6 @@ app.whenReady().then(() => {
 
   // Needed to make sure the positioner places it correctly
   setTimeout(() => showPreferences(), 500);
-
-  autoLaunch.isEnabled().then((isEnabled: boolean) => {
-    if (isEnabled) return;
-
-    return dialog
-      .showMessageBox({
-        title: "DexTop",
-        message:
-          "DexTop will launch at startup. You may need to accept a permissions prompt.",
-      })
-      .then(() => {
-        autoLaunch.enable();
-      });
-  });
 });
 
 const menuTemplate = (
@@ -175,6 +161,27 @@ const showPreferences = () => {
       additionalArguments: [JSON.stringify(state)],
     },
   });
+
+  preferences.webContents
+    .executeJavaScript("localStorage.getItem('alreadyRun')")
+    .then((item) => {
+      if (item) {
+        return;
+      }
+
+      return dialog
+        .showMessageBox({
+          title: "DexTop",
+          message:
+            "DexTop will launch at startup. You may need to accept a permissions prompt.",
+        })
+        .then(() => autoLaunch.enable())
+        .then(() => {
+          return preferences.webContents.executeJavaScript(
+            "localStorage.setItem('alreadyRun', true)"
+          );
+        });
+    });
 
   preferences.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
