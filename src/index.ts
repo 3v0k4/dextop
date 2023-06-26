@@ -122,11 +122,11 @@ const menuTemplate = (
     { label: "Preferences", click: showPreferences },
     {
       label: "Donate",
-      click: () => shell.openExternal("https://tips.dextop.odone.io"),
+      click: () => shell.openExternal("http://tips.dextop.odone.io"),
     },
     {
       label: "Contact",
-      click: () => shell.openExternal("https://contact.dextop.odone.io"),
+      click: () => shell.openExternal("http://contact.dextop.odone.io"),
     },
     { type: "separator" },
     { role: "quit" },
