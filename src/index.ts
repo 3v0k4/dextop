@@ -20,6 +20,15 @@ import updateElectronApp from "update-electron-app";
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
+const PRODUCTION_CONTENT_SECURITY_POLICY = [
+  "default-src 'none'",
+  "connect-src 'self'",
+  "img-src 'self'",
+  "style-src 'unsafe-inline'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join("; ");
+
 updateElectronApp();
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -64,6 +73,20 @@ const autoLaunch = new AutoLaunch({
 });
 
 app.whenReady().then(() => {
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        "Content-Security-Policy": app.isPackaged
+          ? [PRODUCTION_CONTENT_SECURITY_POLICY + "; script-src 'self'"]
+          : [
+              PRODUCTION_CONTENT_SECURITY_POLICY +
+                "; script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+            ],
+      },
+    });
+  });
+
   ipcMain.handle("start", start);
 
   tray = new Tray(nativeImage.createEmpty());
@@ -99,11 +122,11 @@ const menuTemplate = (
     { label: "Preferences", click: showPreferences },
     {
       label: "Donate",
-      click: () => shell.openExternal("http://tips.dextop.odone.io"),
+      click: () => shell.openExternal("https://tips.dextop.odone.io"),
     },
     {
       label: "Contact",
-      click: () => shell.openExternal("http://contact.dextop.odone.io"),
+      click: () => shell.openExternal("https://contact.dextop.odone.io"),
     },
     { type: "separator" },
     { role: "quit" },
@@ -169,7 +192,13 @@ const hide = (event?: Electron.Event) => {
   isAppQuitting = false;
 };
 
-const start = async (_: unknown, session: Session) => {
+const validateSender = (frame: Electron.WebFrameMain) => {
+  return new URL(frame.url).host === new URL(MAIN_WINDOW_WEBPACK_ENTRY).host;
+};
+
+const start = async (event: Electron.IpcMainInvokeEvent, session: Session) => {
+  if (!validateSender(event.senderFrame)) return null;
+
   if (loopId) {
     clearInterval(loopId);
   }
