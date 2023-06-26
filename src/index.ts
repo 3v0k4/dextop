@@ -29,6 +29,9 @@ const PRODUCTION_CONTENT_SECURITY_POLICY = [
   "form-action 'self'",
 ].join("; ");
 
+const DONATE_URL = "http://tips.dextop.odone.io";
+const CONTACT_URL = "http://contact.dextop.odone.io";
+
 updateElectronApp();
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -70,6 +73,26 @@ app.dock.hide();
 
 const autoLaunch = new AutoLaunch({
   name: "DexTop",
+});
+
+app.on("web-contents-created", (_event, contents) => {
+  contents.on("will-navigate", (event, _navigationUrl) => {
+    event.preventDefault();
+  });
+
+  contents.setWindowOpenHandler(({ url }) => {
+    if (
+      [new URL(CONTACT_URL).origin, new URL(DONATE_URL).origin].includes(
+        new URL(url).origin
+      )
+    ) {
+      setImmediate(() => {
+        shell.openExternal(url);
+      });
+    }
+
+    return { action: "deny" };
+  });
 });
 
 app.whenReady().then(() => {
@@ -122,11 +145,11 @@ const menuTemplate = (
     { label: "Preferences", click: showPreferences },
     {
       label: "Donate",
-      click: () => shell.openExternal("http://tips.dextop.odone.io"),
+      click: () => shell.openExternal(DONATE_URL),
     },
     {
       label: "Contact",
-      click: () => shell.openExternal("http://contact.dextop.odone.io"),
+      click: () => shell.openExternal(CONTACT_URL),
     },
     { type: "separator" },
     { role: "quit" },
