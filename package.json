@@ -1,7 +1,7 @@
 {
   "name": "dextop",
   "productName": "DexTop",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "DexTop - Real-time Dexcom blood sugars on your desktop.",
   "main": ".webpack/main",
   "repository": "github:3v0k4/dextop",
