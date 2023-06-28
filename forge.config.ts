@@ -1,6 +1,5 @@
 import type { ForgeConfig } from "@electron-forge/shared-types";
 import { MakerSquirrel } from "@electron-forge/maker-squirrel";
-import { MakerZIP } from "@electron-forge/maker-zip";
 import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerRpm } from "@electron-forge/maker-rpm";
 import { MakerDMG } from "@electron-forge/maker-dmg";
@@ -14,9 +13,10 @@ const appleId = process.env["APPLE_ID"];
 const appleIdPassword = process.env["APPLE_PASSWORD"];
 const teamId = process.env["APPLE_TEAM_ID"];
 const credentials = appleId && appleIdPassword && teamId;
+const publish = process.env["GITHUB_TOKEN"];
 
 const config: ForgeConfig = {
-  publishers: credentials
+  publishers: publish
     ? [
         {
           name: "@electron-forge/publisher-github",
@@ -52,10 +52,8 @@ const config: ForgeConfig = {
     new MakerSquirrel({
       iconUrl: "https://dextop.odone.io/images/icon.ico",
       setupIcon: "src/images/icon.ico",
+      authors: "Riccardo Odone",
     }),
-
-    // Any platform
-    new MakerZIP({}, ["darwin"]),
 
     // macOS
     new MakerDMG({
