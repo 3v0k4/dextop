@@ -507,13 +507,21 @@ const drawIcon = (glucose?: Glucose) =>
   ctx = canvas.getContext("2d");
   ctx.fillStyle = "#fff";
   ctx.strokeStyle = "#fff";
-  ctx.font = '32px Sofia Sans Extra Condensed';
-  ctx.fillText("${glucose?.value ?? "..."}", 0, 22);
+  ctx.font = "${font(glucose)} Sofia Sans Extra Condensed";
+  ctx.fillText("${glucose?.value ?? '...'}", 0, 22);
   ${trendToPath(glucose?.trend ?? "")}
   ctx.stroke();
   ctx.fill();
   canvas.toDataURL();
   `;
+
+const font = (glucose?: Glucose): "32px" | "28px" => {
+  if (!glucose) return "32px";
+  const chars = String(glucose.value).split("").filter(x => x !== ".");
+  if (chars.length === 3) return "28px";
+  if (chars.length === 2) return "32px";
+  return "32px";
+}
 
 const trendToPath = (trend: string) => {
   switch (trend) {
