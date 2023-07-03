@@ -190,7 +190,7 @@ const showPreferences = () => {
             );
           });
       });
-    }
+  }
 
   preferences.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
@@ -508,7 +508,7 @@ const drawIcon = (glucose?: Glucose) =>
   ctx.fillStyle = "#fff";
   ctx.strokeStyle = "#fff";
   ctx.font = "${font(glucose)} Sofia Sans Extra Condensed";
-  ctx.fillText("${glucose?.value ?? '...'}", 0, 22);
+  ctx.fillText("${glucose?.value ?? "..."}", 0, 22);
   ${trendToPath(glucose?.trend ?? "")}
   ctx.stroke();
   ctx.fill();
@@ -517,11 +517,13 @@ const drawIcon = (glucose?: Glucose) =>
 
 const font = (glucose?: Glucose): "32px" | "28px" => {
   if (!glucose) return "32px";
-  const chars = String(glucose.value).split("").filter(x => x !== ".");
+  const chars = String(glucose.value)
+    .split("")
+    .filter((x) => x !== ".");
   if (chars.length === 3) return "28px";
   if (chars.length === 2) return "32px";
   return "32px";
-}
+};
 
 const trendToPath = (trend: string) => {
   switch (trend) {
