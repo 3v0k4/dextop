@@ -168,27 +168,29 @@ const showPreferences = () => {
     },
   });
 
-  preferences.webContents
-    .executeJavaScript("localStorage.getItem('alreadyRun')")
-    .then((item) => {
-      if (item) {
-        return;
-      }
+  if (process.platform === "darwin") {
+    preferences.webContents
+      .executeJavaScript("localStorage.getItem('alreadyRun')")
+      .then((item) => {
+        if (item) {
+          return;
+        }
 
-      return dialog
-        .showMessageBox({
-          title: "DexTop",
-          message:
-            "DexTop will launch at startup. You may need to accept a permissions prompt.",
-        })
-        .then(() => autoLaunch.enable())
-        .then(() => {
-          if (!preferences) return;
-          return preferences.webContents.executeJavaScript(
-            "localStorage.setItem('alreadyRun', true)"
-          );
-        });
-    });
+        return dialog
+          .showMessageBox({
+            title: "DexTop",
+            message:
+              "DexTop will launch at startup. You may need to accept a permissions prompt.",
+          })
+          .then(() => autoLaunch.enable())
+          .then(() => {
+            if (!preferences) return;
+            return preferences.webContents.executeJavaScript(
+              "localStorage.setItem('alreadyRun', true)"
+            );
+          });
+      });
+    }
 
   preferences.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
