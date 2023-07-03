@@ -141,10 +141,9 @@ const menuTemplate = (
       enabled: false,
     },
     {
-      label: "Website & Updates",
+      label: "Website",
       click: () => shell.openExternal(WEBSITE_URL),
     },
-    { type: "separator" },
     {
       label: "Donate",
       click: () => shell.openExternal(DONATE_URL),
