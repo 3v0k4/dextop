@@ -36,6 +36,7 @@ const PRODUCTION_CONTENT_SECURITY_POLICY = [
   "font-src fonts.gstatic.com",
 ].join("; ");
 
+const WEBSITE_URL = "https://dextop.odone.io";
 const DONATE_URL = "http://tips.dextop.odone.io";
 const CONTACT_URL = "http://contact.dextop.odone.io";
 
@@ -134,6 +135,16 @@ const menuTemplate = (
 ): Parameters<typeof Menu.buildFromTemplate>[0] => {
   const DEFAULT: MenuItemConstructorOptions[] = [
     { label: "Preferences", click: showPreferences },
+    { type: "separator" },
+    {
+      label: `DexTop version ${app.getVersion()}`,
+      enabled: false,
+    },
+    {
+      label: "Website & Updates",
+      click: () => shell.openExternal(WEBSITE_URL),
+    },
+    { type: "separator" },
     {
       label: "Donate",
       click: () => shell.openExternal(DONATE_URL),
