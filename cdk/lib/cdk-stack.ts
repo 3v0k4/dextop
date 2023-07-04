@@ -6,7 +6,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 // import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 import { Construct } from "constructs";
 
-const DOMAIN_NAME = "dextop.odone.io";
+const DOMAIN_NAME = "getdextop.com";
 // const ASSETS_PATH = "../website/dist";
 
 export class CdkStack extends cdk.Stack {
