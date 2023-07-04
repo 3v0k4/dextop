@@ -342,7 +342,10 @@ const getGlucose = async (
     host: host(region),
   });
   if (!sessionId) return { _kind: "fail" };
-  const [glucose] = await getEstimatedGlucoseValues(sessionId);
+  const [glucose] = await getEstimatedGlucoseValues({
+    sessionId,
+    host: host(region),
+  });
   return glucose
     ? { _kind: "ok", data: glucose }
     : { _kind: "no-glucose-in-5-minutes" };
@@ -421,16 +424,19 @@ const getSessionId = async ({
   }
 };
 
-const getEstimatedGlucoseValues = async (
-  sessionId: string
-): Promise<Glucose[]> => {
+const getEstimatedGlucoseValues = async ({
+  sessionId,
+  host,
+}: {
+  sessionId: string;
+  host: string;
+}): Promise<Glucose[]> => {
   const body = {
     maxCount: 1,
     minutes: 6,
     sessionId,
   };
-  const url =
-    "https://shareous1.dexcom.com/ShareWebServices/Services/Publisher/ReadPublisherLatestGlucoseValues";
+  const url = `https://${host}/ShareWebServices/Services/Publisher/ReadPublisherLatestGlucoseValues`;
   const response = await post(body, url);
   if (response._kind !== "ok") {
     return [];
