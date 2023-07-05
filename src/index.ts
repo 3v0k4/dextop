@@ -531,12 +531,12 @@ const drawIcon = (glucose?: Glucose) =>
   canvas.toDataURL();
   `;
 
-const font = (glucose?: Glucose): "32px" | "28px" => {
+const font = (glucose?: Glucose): "32px" | "20px" => {
   if (!glucose) return "32px";
   const chars = String(glucose.value)
     .split("")
     .filter((x) => x !== ".");
-  if (chars.length === 3) return "28px";
+  if (chars.length === 3) return "20px";
   if (chars.length === 2) return "32px";
   return "32px";
 };
