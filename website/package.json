@@ -1,7 +1,14 @@
 {
   "name": "dextop-website",
   "private": true,
+  "scripts": {
+    "start": "concurrently \"npm run watch-css\" \"npm run dev-server\"",
+    "watch-css": "tailwindcss -i input.css -o public/output.css --watch",
+    "dev-server": "http-server -c-1 public"
+  },
   "devDependencies": {
+    "concurrently": "^8.2.0",
+    "http-server": "^14.1.1",
     "tailwindcss": "^3.3.2"
   }
 }
