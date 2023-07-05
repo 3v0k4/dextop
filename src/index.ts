@@ -515,30 +515,34 @@ const host = (region: Exclude<Region, "">): string => {
   }
 };
 
-const drawIcon = (glucose?: Glucose) =>
-  `
+const drawIcon = (glucose?: Glucose) => {
+  const { value, fontSize } = format(glucose);
+  return `
   canvas = document.createElement("canvas");
   canvas.width = 32;
   canvas.height = 32;
   ctx = canvas.getContext("2d");
   ctx.fillStyle = "#fff";
   ctx.strokeStyle = "#fff";
-  ctx.font = "${font(glucose)} Sofia Sans Extra Condensed";
-  ctx.fillText("${glucose?.value ?? "..."}", 0, 22);
+  ctx.font = "${fontSize} Sofia Sans Extra Condensed";
+  ctx.fillText("${value}", 0, 22);
   ${trendToPath(glucose?.trend ?? "")}
   ctx.stroke();
   ctx.fill();
   canvas.toDataURL();
   `;
+};
 
-const font = (glucose?: Glucose): "32px" | "20px" => {
-  if (!glucose) return "32px";
-  const chars = String(glucose.value)
-    .split("")
-    .filter((x) => x !== ".");
-  if (chars.length === 3) return "20px";
-  if (chars.length === 2) return "32px";
-  return "32px";
+const format = (
+  glucose?: Glucose
+): { value: string; fontSize: "32px" | "26px" | "20px" } => {
+  if (!glucose) return { value: "...", fontSize: "32px" };
+  if (!glucose.value) return { value: "...", fontSize: "32px" };
+  const value = String(glucose.value).split("").slice(0, 3);
+  if (value.length === 3 && value.includes("."))
+    return { value: value.join(""), fontSize: "26px" };
+  if (value.length === 3) return { value: value.join(""), fontSize: "20px" };
+  return { value: value.join(""), fontSize: "32px" };
 };
 
 const trendToPath = (trend: string) => {
