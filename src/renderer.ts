@@ -1,4 +1,4 @@
-import "./index.css";
+import "./main.css";
 
 const form = document.querySelector("form");
 if (!(form instanceof HTMLFormElement)) throw new Error("Form not found");

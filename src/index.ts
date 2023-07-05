@@ -30,7 +30,7 @@ const PRODUCTION_CONTENT_SECURITY_POLICY = [
   "default-src 'none'",
   "connect-src 'self'",
   "img-src 'self'",
-  "style-src 'unsafe-inline' fonts.googleapis.com",
+  "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
   "base-uri 'self'",
   "form-action 'self'",
   "font-src fonts.gstatic.com",

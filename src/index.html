@@ -11,17 +11,17 @@
   <body style="padding: 10px 10px;">
     <form>
       <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; height: 30px;">
-        <label for="email" style="width: 60px;">Email</label>
-        <input required type="email" id="email" name="email" style="flex: 1" />
+        <label for="email" class="w-20">Email</label>
+        <input required type="email" id="email" name="email" style="flex: 1" class="border border-gray-400 px-2" />
       </div>
 
       <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; height: 30px;">
-        <label for="password" style="width: 60px;">Password</label>
-        <input required type="password" id="password" name="password" style="flex: 1" />
+        <label for="password" class="w-20">Password</label>
+        <input required type="password" id="password" name="password" style="flex: 1" class="border border-gray-400 px-2" />
       </div>
 
       <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; height: 30px;">
-        <span style="width: 60px;">Region</span>
+        <span class="w-20">Region</span>
 
         <div>
           <input required type="radio" id="us" name="region" value="us" style="margin: 0; padding: 0;">
@@ -34,12 +34,12 @@
         </div>
       </div>
 
-      <p style="margin-top: 10px; font-size: 0.8rem;">
+      <p class="mt-2 text-center text-[10px]">
         (Your credentials are only used to log into Dexcom's servers)
       </p>
 
       <div style="display: flex; justify-content: center; margin-top: 25px; height: 30px;">
-        <button type="submit" id="submit" style="width: 100px;">Start</button>
+        <button type="submit" id="submit" class="w-24 border border-gray-400 rounded">Start</button>
       </div>
 
       <p id="error" style="margin-top: 10px; color: red; text-align: center;">
