@@ -31,7 +31,7 @@
         <h2 class="text-3xl mt-4 text-center">Real-time Dexcom blood sugars on your desktop</h2>
       </div>
 
-      <div class="flex flex-col xl:flex-row justify-around items-center mt-24 gap-y-20">
+      <div class="flex flex-col xl:flex-row justify-around items-center mt-36 gap-y-20">
         <a href="#" class="LinkMac w-[90%] xl:w-[45%] hover:scale-105 transition-transform relative rounded overflow-hidden group h-96 inline-block transition-shadow hover:shadow-lg hover:shadow-green-100">
           <div class="hidden group-hover:grid absolute top-0 bottom-0 right-0 left-0 place-content-center">
             <div class="flex flex-row items-center gap-2 mt-8 justify-center text-4xl">
@@ -115,7 +115,7 @@
         </a>
       </div>
 
-      <div class="mt-24 w-96 mx-auto">
+      <div class="mt-36 w-96 mx-auto">
         <h2 class="text-3xl mt-20 text-center">Free &amp; Sugar Free</h2>
 
         <a href="#" class="LinkMac flex flex-row items-center gap-2 mt-8 justify-center">
@@ -148,7 +148,7 @@
         </a>
       </div>
 
-      <div class="mt-24 max-w-[1680px] mx-auto px-8">
+      <div class="mt-36 max-w-[1680px] mx-auto px-8">
         <h2 class="text-3xl text-center">Testimonials</h2>
 
         <div class="grid mt-8 grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-12 items-start">
@@ -298,7 +298,7 @@
         </div>
       </div>
 
-      <div class="mt-24 max-w-2xl mx-auto px-8">
+      <div class="mt-36 max-w-2xl mx-auto px-8">
         <h2 class="text-3xl text-center">Frequently Asked Questions</h2>
 
         <h3 class="font-bold mt-12">[Windows] How can I prevent DexTop from becoming hidden?</h3>
@@ -309,6 +309,37 @@
         </p>
       </div>
     </div>
+
+    <footer class="bg-black mt-36 py-24 text-white text-base">
+      <div class="max-w-4xl mx-auto text-center px-5 lg:px-0">
+        <p>Ciao, I'm Riccardo. I've been a type 1 diabetic for more than 25 years and my last A1C was 4.84%.</p>
+
+        <picture>
+          <source srcset="/images/riccardo.webp" type="image/webp">
+          <source srcset="/images/riccardo.png" type="image/jpeg">
+          <img alt="Portrait of Riccardo" src="/images/riccardo.png" class="mt-12 mx-auto max-w-[200px] h-auto rounded-full" />
+        </picture>
+
+        <p class="mt-12">I am not a doctor.</p>
+        <p class="mt-3">I share the perspective of somebody who has been dealing with type 1 diabetes 24/7 for 25 years. Nothing that I say constitutes medical advice. Always consult with a real doctor before making any changes.</p>
+        <p class="mt-3 text-yellow">Be a skeptic. I mean it.</p>
+      </div>
+
+      <div class="max-w-4xl mx-auto mt-32">
+        <div class="flex flex-col lg:flex-row items-center justify-between gap-8 px-5 lg:px-0">
+          <picture>
+            <source srcset="/images/icon.webp" type="image/webp">
+            <source srcset="/images/icon.png" type="image/jpeg">
+            <img alt="DexTop logo" src="/images/icon.png" class="h-8 flex rounded" />
+          </picture>
+
+          <div class="flex gap-6">
+            <a class="uppercase text-sm underline" href="https://odone.io/tir.html" target="_blank" rel="noopener noreferrer">Improve TIR</a>
+            <a class="uppercase text-sm underline" href="https://odone.io" target="_blank" rel="noopener noreferrer">Personal Webpage</a>
+          </div>
+        </div>
+      </div>
+    </footer>
 
     <script>
       const dexTops = Array.from(document.querySelectorAll(".DexTop"));
