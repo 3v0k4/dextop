@@ -5,6 +5,7 @@ module.exports = {
     extend: {
       fontFamily: {
         'onest': ['Onest', 'sans-serif'],
+        'onest-bold': ['Onest-Bold', 'sans-serif'],
       },
     },
   },

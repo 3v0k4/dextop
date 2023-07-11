@@ -5,4 +5,11 @@
 @font-face {
   font-family: "Onest";
   src: url(./Onest-Regular.woff) format("woff");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Onest-Bold";
+  src: url(./Onest-Bold.woff) format("woff");
+  font-display: swap;
 }
