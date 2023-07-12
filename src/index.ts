@@ -368,7 +368,7 @@ const trendToIcon = (trend: string) => {
     case "DoubleDown":
       return "⇊";
     default:
-      return trend;
+      return "";
   }
 };
 
