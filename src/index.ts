@@ -7,6 +7,7 @@ import {
   dialog,
   ipcMain,
   nativeImage,
+  safeStorage,
   shell,
   session,
 } from "electron";
@@ -71,6 +72,7 @@ let preferences: BrowserWindow | undefined;
 let state: Session = { email: "", password: "", region: "" };
 let loopId: ReturnType<typeof setInterval> | undefined;
 let isAppQuitting = false;
+let isFirstLaunch = true;
 
 if (process.platform === "darwin") {
   app.dock.hide();
@@ -204,17 +206,7 @@ const showPreferences = () => {
 
   preferences.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
-  preferences.webContents
-    .executeJavaScript("localStorage.getItem('session')")
-    .then((sessionString) => {
-      if (!sessionString) {
-        return;
-      }
-      const session = JSON.parse(sessionString);
-      state = { ...state, ...session };
-      if (!preferences) return;
-      preferences.webContents.send("retrievedSession", session);
-    });
+  retrieveSession(preferences);
 
   const positioner = new Positioner(preferences);
   const { x, y } = tray
@@ -272,6 +264,7 @@ const start = async (event: Electron.IpcMainInvokeEvent, session: Session) => {
         `localStorage.setItem('session', '${JSON.stringify({
           email: session.email,
           region: session.region,
+          password: encryptOr(session.password, ""),
         })}')`
       );
       return;
@@ -653,4 +646,51 @@ const setImage = (glucose?: Glucose) => {
       if (!tray) return;
       tray.setImage(icon);
     });
+};
+
+const encryptOr = (string: string, or: string): string => {
+  try {
+    return safeStorage.encryptString(string).toString("base64");
+  } catch (Error) {
+    return or;
+  }
+};
+
+const decryptOr = (string: string | undefined, or: string): string => {
+  if (!string) return or;
+  const buffer = Buffer.from(string, "base64");
+
+  try {
+    return safeStorage.decryptString(buffer);
+  } catch (Error) {
+    return or;
+  }
+};
+
+const retrieveSession = async (preferences: BrowserWindow) => {
+  const shownSafeStorageWarning =
+    await preferences.webContents.executeJavaScript(
+      "localStorage.getItem('shownSafeStorageWarning')"
+    );
+  if (!shownSafeStorageWarning)
+    await dialog.showMessageBox({
+      title: "DexTop",
+      message:
+        "DexTop will save your password in safe storage. You may need to accept a permissions prompt.",
+    });
+  await preferences.webContents.executeJavaScript(
+    "localStorage.setItem('shownSafeStorageWarning', true)"
+  );
+  const sessionJson = await preferences.webContents.executeJavaScript(
+    "localStorage.getItem('session')"
+  );
+  if (!sessionJson) return;
+  const session = JSON.parse(sessionJson);
+  state = {
+    ...session,
+    password: decryptOr(session.password, ""),
+  };
+  if (!isFirstLaunch) return;
+  isFirstLaunch = false;
+  preferences.webContents.send("retrievedSession", state);
 };

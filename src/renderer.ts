@@ -1,4 +1,9 @@
 import "./main.css";
+import spinnerPath from "./images/spinner.gif";
+
+const spinner = document.querySelector("#spinner");
+if (!(spinner instanceof HTMLImageElement)) throw new Error("Image not found");
+spinner.src = spinnerPath;
 
 const form = document.querySelector("form");
 if (!(form instanceof HTMLFormElement)) throw new Error("Form not found");
@@ -27,7 +32,7 @@ if (!(error instanceof HTMLParagraphElement))
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  submit.disabled = true;
+  setSubmitting(submit, spinner);
   const formData = new FormData(form);
   const data = {
     email: String(formData.get("email")),
@@ -49,7 +54,7 @@ const parseRegion = (region: string): "us" | "eu" | "" => {
 };
 
 window.versions.onStartResponse((_, response) => {
-  submit.disabled = false;
+  setSubmitted(submit, spinner);
   switch (response._kind) {
     case "ok":
       error.innerText = "";
@@ -84,11 +89,33 @@ const selectRegion = (region: "us" | "eu" | "") => {
   }
 };
 
-fillEmail(window.versions.state.email);
-fillPassword(window.versions.state.password);
-selectRegion(window.versions.state.region);
+const { email, region, password } = window.versions.state;
 
-window.versions.onSession((_, { email, region }) => {
+fillEmail(email);
+fillPassword(password);
+selectRegion(region);
+
+window.versions.onSession((_, { email, region, password }) => {
   fillEmail(email);
+  fillPassword(password);
   selectRegion(region);
+
+  if (email !== "" && password !== "" && region !== "") {
+    submit.click();
+  }
 });
+
+const setSubmitting = (
+  submit: HTMLButtonElement,
+  spinner: HTMLImageElement
+) => {
+  submit.disabled = true;
+  submit.style.display = "none";
+  spinner.style.display = "block";
+};
+
+const setSubmitted = (submit: HTMLButtonElement, spinner: HTMLImageElement) => {
+  submit.disabled = false;
+  submit.style.display = "block";
+  spinner.style.display = "none";
+};
