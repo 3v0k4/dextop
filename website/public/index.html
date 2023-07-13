@@ -126,6 +126,7 @@
           </picture>
 
           <span class="underline">DexTop for macOS</span>
+          <span class="Version text-sm"></span>
         </a>
 
         <a href="#" class="LinkWin flex flex-row items-center gap-2 mt-2 justify-center">
@@ -136,6 +137,7 @@
           </picture>
 
           <span class="underline">DexTop for Windows</span>
+          <span class="Version text-sm"></span>
         </a>
 
         <a href="https://forms.gle/XSxuVo55CQBrsqhbA" class="flex flex-row items-center gap-2 mt-8 justify-center" target="_blank" rel="noopener noreferrer">
@@ -345,6 +347,7 @@
       const dexTops = Array.from(document.querySelectorAll(".DexTop"));
       const linksMac = Array.from(document.querySelectorAll(".LinkMac"));
       const linksWin = Array.from(document.querySelectorAll(".LinkWin"));
+      const versions = Array.from(document.querySelectorAll(".Version"));
 
       const VALUES = [
         "83 →", "87 ↗", "80 ↘"
@@ -360,6 +363,8 @@
       fetch('https://api.github.com/repos/3v0k4/dextop/releases/latest')
         .then(response => response.json())
         .then(json => {
+          versions.forEach(version => version.innerText = `(version ${json.name.slice(1)})`);
+
           const mac = json.assets.filter(asset => asset.content_type === "application/x-apple-diskimage")[0].browser_download_url;
           linksMac.forEach(link => link.href = mac);
 
