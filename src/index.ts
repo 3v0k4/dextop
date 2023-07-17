@@ -7,6 +7,7 @@ import {
   dialog,
   ipcMain,
   nativeImage,
+  powerMonitor,
   safeStorage,
   shell,
   session,
@@ -56,7 +57,7 @@ export type Event =
   | { _kind: "error" };
 
 type Glucose = {
-  timestamp: string;
+  date: { epoch: number; offset: { hours: number; minutes: number } };
   value: number | null;
   trend: string;
 };
@@ -65,12 +66,15 @@ type Response<T = unknown> =
   | { _kind: "ok"; data: T }
   | { _kind: "error"; data: unknown }
   | { _kind: "wrong-credentials" }
+  | { _kind: "retry" }
   | { _kind: "fail" };
+
+const DEXCOM_DELAY = 20000;
 
 let tray: Tray | undefined;
 let preferences: BrowserWindow | undefined;
 let state: Session = { email: "", password: "", region: "" };
-let loopId: ReturnType<typeof setInterval> | undefined;
+let timeoutId: ReturnType<typeof setTimeout> | undefined;
 let isAppQuitting = false;
 let isFirstLaunch = true;
 
@@ -118,6 +122,13 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle("start", start);
+
+  powerMonitor.on("resume", () => {
+    if (!timeoutId) return;
+    clearTimeout(timeoutId);
+    timeoutId = undefined;
+    start_(state);
+  });
 
   tray = new Tray(nativeImage.createEmpty());
   const contextMenu = Menu.buildFromTemplate(menuTemplate());
@@ -251,13 +262,13 @@ const start = async (event: Electron.IpcMainInvokeEvent, session: Session) => {
     return null;
   }
 
-  if (loopId) {
-    clearInterval(loopId);
+  if (timeoutId) {
+    clearTimeout(timeoutId);
+    timeoutId = undefined;
   }
-  const response = await start_(session);
+  const response = await start_(session, true);
   switch (response._kind) {
     case "ok":
-      loopId = setInterval(() => start_(session), 1000 * 60);
       hide();
       preferences.webContents.send("startResponseReceived", response);
       preferences.webContents.executeJavaScript(
@@ -277,20 +288,22 @@ const start = async (event: Electron.IpcMainInvokeEvent, session: Session) => {
   }
 };
 
-const start_ = async (session: Session): Promise<Event> => {
+const start_ = async (session: Session, first = false): Promise<Event> => {
   if (!tray) return { _kind: "error" };
 
   const glucose = await getGlucose(session);
   switch (glucose._kind) {
     case "ok": {
       const contextMenu = Menu.buildFromTemplate(
-        menuTemplate(`Last glucose at ${glucose.data.timestamp}`)
+        menuTemplate(`Last glucose at ${getTimestamp(glucose.data.date)}`)
       );
       tray.setContextMenu(contextMenu);
       state = { ...state, ...session };
       // const RED_FG = '\033[31;1m';
       // const RED_BG = '\033[41;1m';
       setWatcher(glucose.data);
+      const delay = getDelay(glucose.data.date);
+      timeoutId = setTimeout(() => start_(session), delay);
       return { _kind: "ok" };
     }
     case "no-glucose-in-5-minutes": {
@@ -299,6 +312,7 @@ const start_ = async (session: Session): Promise<Event> => {
       );
       tray.setContextMenu(contextMenu);
       setWatcher();
+      timeoutId = setTimeout(() => start_(session), 1000 * 60);
       return { _kind: "ok" };
     }
     case "wrong-credentials": {
@@ -317,6 +331,17 @@ const start_ = async (session: Session): Promise<Event> => {
       const contextMenu = Menu.buildFromTemplate(menuTemplate());
       tray.setContextMenu(contextMenu);
       setWatcher();
+      return { _kind: "error" };
+    }
+    case "retry": {
+      if (first) return { _kind: "error" };
+
+      const contextMenu = Menu.buildFromTemplate(
+        menuTemplate(`Lost signal. Retrying..`)
+      );
+      tray.setContextMenu(contextMenu);
+      setWatcher();
+      timeoutId = setTimeout(() => start_(session), 1000 * 60);
       return { _kind: "error" };
     }
   }
@@ -414,6 +439,8 @@ const getSessionId = async ({
       return null;
     case "fail":
       return null;
+    case "retry":
+      return null;
   }
 };
 
@@ -452,12 +479,13 @@ const getEstimatedGlucoseValues = async ({
 
   return data
     .map((glucose) => {
-      const timestamp = convertToLocalTime(glucose.DT);
-      if (!timestamp) return null;
+      const date = parseDate(glucose.DT);
+      if (!date) return null;
+      if (nextValueAt(date) < 0) return null;
       return {
         value: glucose.Value,
         trend: glucose.Trend,
-        timestamp: timestamp,
+        date,
       };
     })
     .filter(notNull);
@@ -482,21 +510,37 @@ const post = async (
       return { _kind: "error", data: json };
     }
   } catch (error) {
+    const parsed = parseError(error);
+    if (parsed.code === "ENETDOWN") return { _kind: "retry" };
+    if (parsed.code === "ENOTFOUND") return { _kind: "retry" };
+    if (parsed.code === "UND_ERR_CONNECT_TIMEOUT") return { _kind: "retry" };
     return { _kind: "fail" };
   }
 };
 
-const convertToLocalTime = (dt: string): string | null => {
-  const [_1, epochWithTz] = dt.match(/Date\((.+)\)/) || [];
-  if (!epochWithTz) return null;
-  const [_2, epoch, sign, offset] = epochWithTz.match(/(\d+)([-+])(\d+)/) || [];
-  if (!epoch || !sign || !offset) return null;
-  const date = new Date(parseInt(epoch, 10));
-  const iso =
-    date.toISOString().slice(0, -1) + (sign === "-" ? "+" : "-") + offset;
-  const local = new Date(iso).toISOString().slice(0, -1) + `${sign}${offset}`;
-  const [_3, timestamp] = local.match(/.+T(\d\d:\d\d):.+/) || [];
-  return timestamp || null;
+const parseError = (error: unknown): { code: string } => {
+  if (!error) return { code: "WHATEVER" };
+  if (typeof error !== "object") return { code: "WHATEVER" };
+  if (!("cause" in error)) return { code: "WHATEVER" };
+  const cause = (error as { cause: Record<string, unknown> }).cause;
+  return { code: (cause as { code: string }).code };
+};
+
+const parseDate = (dt: string): null | Glucose["date"] => {
+  const [_1, epoch, hours, minutes] = (
+    dt.match(/Date\((\d+)\+(\d\d)(\d\d)\)/) || []
+  ).map((x) => parseInt(x, 10));
+  if (epoch === undefined || hours === undefined || minutes === undefined) {
+    return null;
+  }
+  return { epoch, offset: { hours, minutes } };
+};
+
+const getTimestamp = (date: Glucose["date"]): string => {
+  const offset = (date.offset.hours * 60 + date.offset.minutes) * 60 * 1000;
+  const local = new Date(date.epoch + offset);
+  const [_, timestamp] = local.toISOString().match(/.+T(\d\d:\d\d):.+/) || [];
+  return timestamp as string;
 };
 
 const host = (region: Exclude<Region, "">): string => {
@@ -694,3 +738,10 @@ const retrieveSession = async (preferences: BrowserWindow) => {
   isFirstLaunch = false;
   preferences.webContents.send("retrievedSession", state);
 };
+
+const getDelay = (date: Glucose["date"]): number => {
+  return Math.max(5000, nextValueAt(date));
+};
+
+const nextValueAt = (date: Glucose["date"]): number =>
+  date.epoch + 60 * 5 * 1000 + DEXCOM_DELAY - Date.now();
