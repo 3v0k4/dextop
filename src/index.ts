@@ -125,11 +125,8 @@ app.whenReady().then(() => {
 
   tray.setToolTip("DexTop");
 
-  // Needed to make sure the positioner places it correctly
-  setTimeout(() => {
-    showPreferences();
-    setWatcher();
-  }, 500);
+  showPreferences();
+  setWatcher();
 });
 
 const menuTemplate = (
@@ -208,17 +205,18 @@ const showPreferences = () => {
 
   retrieveSession(preferences);
 
-  const positioner = new Positioner(preferences);
-  const { x, y } = tray
-    ? positioner.calculate(
-        process.platform === "darwin" ? "trayCenter" : "trayBottomCenter",
-        tray.getBounds()
-      )
-    : { x: 0, y: 0 };
-  preferences.setPosition(x, y);
-
   preferences.once("ready-to-show", () => {
     if (!preferences) return;
+
+    const positioner = new Positioner(preferences);
+    const { x, y } = tray
+      ? positioner.calculate(
+          process.platform === "darwin" ? "trayCenter" : "trayBottomCenter",
+          tray.getBounds()
+        )
+      : { x: 0, y: 0 };
+    preferences.setPosition(x, y);
+
     preferences.show();
   });
 
