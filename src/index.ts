@@ -123,8 +123,6 @@ app.whenReady().then(() => {
   const contextMenu = Menu.buildFromTemplate(menuTemplate());
   tray.setContextMenu(contextMenu);
 
-  tray.setToolTip("DexTop");
-
   showPreferences();
   setWatcher();
 });
@@ -506,90 +504,228 @@ const host = (region: Exclude<Region, "">): string => {
   }
 };
 
-const drawIcon = (glucose?: Glucose) => {
-  const { value, fontSize } = format(glucose);
+type Segment =
+  | "Top"
+  | "TopRight"
+  | "BottomRight"
+  | "Bottom"
+  | "BottomLeft"
+  | "TopLeft"
+  | "Center";
+
+const drawDigit = (
+  segments: Segment[],
+  coords: { cols: [number, number]; rows: [number, number, number] }
+): string => {
+  if (segments.length === 0) return "";
+
+  const lines = segments.map((segment) => {
+    switch (segment) {
+      case "Top": {
+        return `
+          ctx.moveTo(${coords.cols[0]}, ${coords.rows[0]});
+          ctx.lineTo(${coords.cols[1]}, ${coords.rows[0]});
+        `;
+      }
+
+      case "Center": {
+        return `
+          ctx.moveTo(${coords.cols[0]}, ${coords.rows[1]});
+          ctx.lineTo(${coords.cols[1]}, ${coords.rows[1]});
+        `;
+      }
+
+      case "Bottom": {
+        return `
+          ctx.moveTo(${coords.cols[0]}, ${coords.rows[2]});
+          ctx.lineTo(${coords.cols[1]}, ${coords.rows[2]});
+        `;
+      }
+
+      case "TopRight": {
+        return `
+          ctx.moveTo(${coords.cols[1]}, ${coords.rows[0]});
+          ctx.lineTo(${coords.cols[1]}, ${coords.rows[1]});
+        `;
+      }
+
+      case "BottomRight": {
+        return `
+          ctx.moveTo(${coords.cols[1]}, ${coords.rows[1]});
+          ctx.lineTo(${coords.cols[1]}, ${coords.rows[2]});
+        `;
+      }
+
+      case "TopLeft": {
+        return `
+          ctx.moveTo(${coords.cols[0]}, ${coords.rows[0]});
+          ctx.lineTo(${coords.cols[0]}, ${coords.rows[1]});
+        `;
+      }
+
+      case "BottomLeft": {
+        return `
+          ctx.moveTo(${coords.cols[0]}, ${coords.rows[1]});
+          ctx.lineTo(${coords.cols[0]}, ${coords.rows[2]});
+        `;
+      }
+    }
+  });
+
+  return (
+    `
+    ctx.strokeStyle = "#fff";
+    ctx.beginPath();
+    ctx.lineWidth = 3;
+  ` +
+    lines.join("\n") +
+    `
+    ctx.stroke();
+  `
+  );
+};
+
+const ONE: Segment[] = ["TopRight", "BottomRight"];
+const TWO: Segment[] = ["Top", "TopRight", "Center", "BottomLeft", "Bottom"];
+const THREE: Segment[] = ["TopRight", "BottomRight", "Top", "Center", "Bottom"];
+const FOUR: Segment[] = ["TopLeft", "TopRight", "Center", "BottomRight"];
+const FIVE: Segment[] = ["TopLeft", "BottomRight", "Top", "Center", "Bottom"];
+const SIX: Segment[] = [
+  "TopLeft",
+  "BottomRight",
+  "Top",
+  "Center",
+  "BottomLeft",
+];
+const SEVEN: Segment[] = ["TopRight", "BottomRight", "Top"];
+const EIGHT: Segment[] = [
+  "TopRight",
+  "BottomRight",
+  "Top",
+  "Bottom",
+  "TopLeft",
+  "BottomLeft",
+  "Center",
+];
+const NINE: Segment[] = [
+  "TopRight",
+  "BottomRight",
+  "Top",
+  "Bottom",
+  "TopLeft",
+  "Center",
+];
+const ZERO: Segment[] = [
+  "TopRight",
+  "BottomRight",
+  "Top",
+  "Bottom",
+  "TopLeft",
+  "BottomLeft",
+];
+
+const DOT: Segment[] = ["Bottom"];
+const EMPTY: Segment[][] = [["Center"], ["Center"], ["Center"]];
+
+const SEGMENTS_BY_CHAR: Record<string, Segment[]> = {
+  "0": ZERO,
+  "1": ONE,
+  "2": TWO,
+  "3": THREE,
+  "4": FOUR,
+  "5": FIVE,
+  "6": SIX,
+  "7": SEVEN,
+  "8": EIGHT,
+  "9": NINE,
+  ".": DOT,
+};
+
+const drawIcon = (glucose?: Glucose): string => {
   return `
   canvas = document.createElement("canvas");
   canvas.width = 32;
   canvas.height = 32;
   ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#fff";
-  ctx.strokeStyle = "#fff";
-  ctx.font = "${fontSize} Sofia Sans Extra Condensed";
-  ctx.fillText("${value}", 0, 22);
-  ${trendToPath(glucose?.trend ?? "")}
-  ctx.stroke();
-  ctx.fill();
+  ${toPath(glucose)}
+  ${toSegmentss(glucose)
+    .map((segments, i) =>
+      drawDigit(segments, { cols: [1 + i * 12, 7 + i * 12], rows: [1, 11, 22] })
+    )
+    .join("\n")}
   canvas.toDataURL();
   `;
 };
 
-const format = (
-  glucose?: Glucose
-): { value: string; fontSize: "32px" | "26px" | "20px" } => {
-  if (!glucose) return { value: "...", fontSize: "32px" };
-  if (!glucose.value) return { value: "...", fontSize: "32px" };
-  const value = String(glucose.value).split("").slice(0, 3);
-  if (value.length === 3 && value.includes("."))
-    return { value: value.join(""), fontSize: "26px" };
-  if (value.length === 3) return { value: value.join(""), fontSize: "20px" };
-  return { value: value.join(""), fontSize: "32px" };
+const toSegmentss = (glucose?: Glucose): Segment[][] => {
+  if (!glucose) return EMPTY;
+  if (!glucose.value) return EMPTY;
+  return String(glucose.value)
+    .split("")
+    .map((x) => SEGMENTS_BY_CHAR[x] || []);
 };
 
-const trendToPath = (trend: string) => {
-  switch (trend) {
+const toPath = (glucose?: Glucose): string => {
+  if (!glucose) return "";
+
+  return (
+    `
+    ctx.strokeStyle = "#fff";
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.lineWidth = 3;
+  ` +
+    trendPath(glucose) +
+    `
+    ctx.closePath();
+    ctx.stroke();
+    ctx.fill();
+  `
+  );
+};
+
+const trendPath = (glucose: Glucose): string => {
+  switch (glucose.trend) {
     case "Flat":
       return `
-      ctx.beginPath();
-      ctx.lineWidth = 3;
-      ctx.moveTo(1, 28);
-      ctx.lineTo(31, 28);
-      ctx.moveTo(28, 26);
-      ctx.lineTo(28, 30);
-      ctx.lineTo(31, 28);
-      ctx.closePath();
+      ctx.moveTo(1, 30);
+      ctx.lineTo(31, 30);
+      ctx.moveTo(28, 28);
+      ctx.lineTo(28, 32);
+      ctx.lineTo(31, 30);
       `;
     case "FortyFiveUp":
       return `
-      ctx.beginPath();
       ctx.moveTo(11, 32);
       ctx.lineTo(15, 26);
       ctx.lineTo(19, 32);
-      ctx.closePath();
       `;
     case "FortyFiveDown":
       return `
-      ctx.beginPath();
       ctx.moveTo(11, 26);
       ctx.lineTo(15, 32);
       ctx.lineTo(19, 26);
-      ctx.closePath();
       `;
     case "SingleUp":
       return `
-      ctx.beginPath();
       ctx.moveTo(1, 32);
       ctx.lineTo(5, 26);
       ctx.lineTo(9, 32);
       ctx.moveTo(21, 32);
       ctx.lineTo(25, 26);
       ctx.lineTo(29, 32);
-      ctx.closePath();
       `;
     case "SingleDown":
       return `
-      ctx.beginPath();
       ctx.moveTo(1, 26);
       ctx.lineTo(5, 32);
       ctx.lineTo(9, 26);
       ctx.moveTo(21, 26);
       ctx.lineTo(25, 32);
       ctx.lineTo(29, 26);
-      ctx.closePath();
       `;
     case "DoubleUp":
       return `
-      ctx.beginPath();
       ctx.moveTo(1, 32);
       ctx.lineTo(5, 26);
       ctx.lineTo(9, 32);
@@ -599,11 +735,9 @@ const trendToPath = (trend: string) => {
       ctx.moveTo(21, 32);
       ctx.lineTo(25, 26);
       ctx.lineTo(29, 32);
-      ctx.closePath();
       `;
     case "DoubleDown":
       return `
-      ctx.beginPath();
       ctx.moveTo(1, 26);
       ctx.lineTo(5, 32);
       ctx.lineTo(9, 26);
@@ -613,7 +747,6 @@ const trendToPath = (trend: string) => {
       ctx.moveTo(21, 26);
       ctx.lineTo(25, 32);
       ctx.lineTo(29, 26);
-      ctx.closePath();
       `;
     default:
       return "";
@@ -621,17 +754,21 @@ const trendToPath = (trend: string) => {
 };
 
 const setWatcher = (glucose?: Glucose) => {
-  setTitle(glucose);
+  setText(glucose);
   setImage(glucose);
 };
 
-const setTitle = (glucose?: Glucose) => {
-  if (process.platform !== "darwin") return;
+const setText = (glucose?: Glucose) => {
   if (!tray) return;
   const title = glucose
     ? `${glucose.value} ${trendToIcon(glucose.trend)}`
-    : "...";
-  tray.setTitle(title);
+    : "---";
+  if (process.platform === "darwin") {
+    tray.setTitle(title);
+    tray.setToolTip("DexTop");
+  } else {
+    tray.setToolTip(title);
+  }
 };
 
 const setImage = (glucose?: Glucose) => {
