@@ -148,6 +148,35 @@
           </picture>
           <span class="underline">Write to me</span>
         </a>
+
+        <details>
+          <summary class="mt-8 uppercase text-center text-xl cursor-pointer">Older versions</summary>
+
+          <ul class="mt-8">
+            <li class="OldVersionTemplate hidden flex gap-2 py-1 px-2 rounded-lg hover:bg-gray-100">
+              <span class="OldVersion w-16"></span>
+              <div class="flex gap-2 items-center OldLinkMac hidden">
+                <picture>
+                  <source srcset="/images/macos.webp" type="image/webp">
+                  <source srcset="/images/macos.png" type="image/jpeg">
+                  <img alt="macOS logo" src="/images/macos.png" class="w-4" />
+                </picture>
+
+                <a href="#" class="underline">macOS</a>
+              </div>
+
+              <div class="flex gap-2 items-center OldLinkWin hidden">
+                <picture>
+                  <source srcset="/images/windows.webp" type="image/webp">
+                  <source srcset="/images/windows.png" type="image/jpeg">
+                  <img alt="Windows logo" src="/images/windows.png" class="w-4" />
+                </picture>
+
+                <a href="#" class="underline">Windows</a>
+              </div>
+            </li>
+          </ul>
+        </details>
       </div>
 
       <div class="mt-36 max-w-[1680px] mx-auto px-8">
@@ -376,6 +405,7 @@
       update();
       setInterval(update, 5000);
 
+      
       //fetch('https://api.github.com/repos/3v0k4/dextop/releases/latest')
         //.then(response => response.json())
       Promise.resolve({
@@ -399,6 +429,60 @@
 
           const win = json.assets.filter(asset => asset.content_type === "application/x-msdos-program")[0].browser_download_url;
           linksWin.forEach(link => link.href = win);
+        })
+
+      const template = document.querySelector(".OldVersionTemplate");
+      //fetch('https://api.github.com/repos/3v0k4/dextop/releases')
+        //.then(response => response.json())
+      Promise.resolve([{
+          name: "v0.7.0",
+          draft: false,
+          prerelease: false,
+          assets: [
+            {
+              content_type: "application/x-apple-diskimage",
+              browser_download_url: "https://github.com/3v0k4/dextop/releases/download/v0.7.0/DexTop-0.7.0-x64.dmg",
+            },
+            {
+              content_type: "application/x-msdos-program",
+              browser_download_url: "https://github.com/3v0k4/dextop/releases/download/v0.7.0/DexTop-0.7.0.Setup.exe",
+            },
+          ],
+        }, {
+          name: "v0.6.0",
+          draft: false,
+          prerelease: false,
+          assets: [
+            {
+              content_type: "application/x-apple-diskimage",
+              browser_download_url: "https://github.com/3v0k4/dextop/releases/download/v0.6.0/DexTop-0.6.0-x64.dmg",
+            },
+            {
+              content_type: "application/x-msdos-program",
+              browser_download_url: "https://github.com/3v0k4/dextop/releases/download/v0.6.0/DexTop-0.6.0.Setup.exe",
+            },
+          ],
+        }])
+        .then(versions => {
+          versions
+            .filter(version => version.draft === false)
+            .filter(version => version.prerelease === false)
+            .forEach(version => {
+              const li = template.cloneNode(true);
+              li.classList.remove('hidden');
+              li.querySelector('.OldVersion').innerText = version.name.slice(1)
+              const windows = version.assets.filter(asset => asset.content_type === "application/x-msdos-program")[0];
+              const macos = version.assets.filter(asset => asset.content_type === "application/x-apple-diskimage")[0];
+              if (windows) {
+                li.querySelector('.OldLinkWin a').href = windows.browser_download_url
+                li.querySelector('.OldLinkWin').classList.remove('hidden')
+              }
+              if (macos) {
+                li.querySelector('.OldLinkMac a').href = macos.browser_download_url
+                li.querySelector('.OldLinkMac').classList.remove('hidden')
+              }
+              template.parentNode.appendChild(li);
+            })
         })
     </script>
   </body>
