@@ -43,11 +43,12 @@ const CONTACT_URL = "http://contact.getdextop.com";
 
 updateElectronApp();
 
-type Region = "us" | "eu" | "";
+export type Region = "us" | "eu";
 export type Session = {
   email: string;
   password: string;
-  region: Region;
+  region: Region | "";
+  unit: Unit | "";
 };
 
 export type Event =
@@ -67,9 +68,11 @@ type Response<T = unknown> =
   | { _kind: "wrong-credentials" }
   | { _kind: "fail" };
 
+export type Unit = "mg/dL" | "mmol/L";
+
 let tray: Tray | undefined;
 let preferences: BrowserWindow | undefined;
-let state: Session = { email: "", password: "", region: "" };
+let state: Session = { email: "", password: "", region: "", unit: "" };
 let loopId: ReturnType<typeof setInterval> | undefined;
 let isAppQuitting = false;
 let isFirstLaunch = true;
@@ -162,7 +165,7 @@ const showPreferences = () => {
   preferences = new BrowserWindow({
     icon: "src/images/icon.png",
     width: 350,
-    height: 300,
+    height: 350,
     movable: false,
     minimizable: false,
     maximizable: false,
@@ -255,11 +258,13 @@ const start = async (event: Electron.IpcMainInvokeEvent, session: Session) => {
     case "ok":
       loopId = setInterval(() => start_(session), 1000 * 60);
       hide();
+      state = { ...state, ...session };
       preferences.webContents.send("startResponseReceived", response);
       preferences.webContents.executeJavaScript(
         `localStorage.setItem('session', '${JSON.stringify({
           email: session.email,
           region: session.region,
+          unit: session.unit,
           password: encryptOr(session.password, ""),
         })}')`
       );
@@ -283,10 +288,9 @@ const start_ = async (session: Session): Promise<Event> => {
         menuTemplate(`Last glucose at ${glucose.data.timestamp}`)
       );
       tray.setContextMenu(contextMenu);
-      state = { ...state, ...session };
       // const RED_FG = '\033[31;1m';
       // const RED_BG = '\033[41;1m';
-      setWatcher(glucose.data);
+      setWatcher({ glucose: glucose.data, unit: session.unit || "mg/dL" });
       return { _kind: "ok" };
     }
     case "no-glucose-in-5-minutes": {
@@ -514,12 +518,12 @@ type Segment =
   | "Center";
 
 const drawDigit = (
-  segments: Segment[],
+  digit: Digit,
   coords: { cols: [number, number]; rows: [number, number, number] }
 ): string => {
-  if (segments.length === 0) return "";
+  if (digit.length === 0) return "";
 
-  const lines = segments.map((segment) => {
+  const lines = digit.map((segment) => {
     switch (segment) {
       case "Top": {
         return `
@@ -585,20 +589,14 @@ const drawDigit = (
   );
 };
 
-const ONE: Segment[] = ["TopRight", "BottomRight"];
-const TWO: Segment[] = ["Top", "TopRight", "Center", "BottomLeft", "Bottom"];
-const THREE: Segment[] = ["TopRight", "BottomRight", "Top", "Center", "Bottom"];
-const FOUR: Segment[] = ["TopLeft", "TopRight", "Center", "BottomRight"];
-const FIVE: Segment[] = ["TopLeft", "BottomRight", "Top", "Center", "Bottom"];
-const SIX: Segment[] = [
-  "TopLeft",
-  "BottomRight",
-  "Top",
-  "Center",
-  "BottomLeft",
-];
-const SEVEN: Segment[] = ["TopRight", "BottomRight", "Top"];
-const EIGHT: Segment[] = [
+const ONE: Digit = ["TopRight", "BottomRight"];
+const TWO: Digit = ["Top", "TopRight", "Center", "BottomLeft", "Bottom"];
+const THREE: Digit = ["TopRight", "BottomRight", "Top", "Center", "Bottom"];
+const FOUR: Digit = ["TopLeft", "TopRight", "Center", "BottomRight"];
+const FIVE: Digit = ["TopLeft", "BottomRight", "Top", "Center", "Bottom"];
+const SIX: Digit = ["TopLeft", "BottomRight", "Top", "Center", "BottomLeft"];
+const SEVEN: Digit = ["TopRight", "BottomRight", "Top"];
+const EIGHT: Digit = [
   "TopRight",
   "BottomRight",
   "Top",
@@ -607,7 +605,7 @@ const EIGHT: Segment[] = [
   "BottomLeft",
   "Center",
 ];
-const NINE: Segment[] = [
+const NINE: Digit = [
   "TopRight",
   "BottomRight",
   "Top",
@@ -615,7 +613,7 @@ const NINE: Segment[] = [
   "TopLeft",
   "Center",
 ];
-const ZERO: Segment[] = [
+const ZERO: Digit = [
   "TopRight",
   "BottomRight",
   "Top",
@@ -624,10 +622,11 @@ const ZERO: Segment[] = [
   "BottomLeft",
 ];
 
-const DOT: Segment[] = ["Bottom"];
-const EMPTY: Segment[][] = [["Center"], ["Center"], ["Center"]];
+const DOT: Digit = ["Bottom"];
+const EMPTY: Digit[] = [["Center"], ["Center"], ["Center"]];
+type Digit = Segment[];
 
-const SEGMENTS_BY_CHAR: Record<string, Segment[]> = {
+const DIGIT_BY_CHAR: Record<string, Digit> = {
   "0": ZERO,
   "1": ONE,
   "2": TWO,
@@ -641,32 +640,41 @@ const SEGMENTS_BY_CHAR: Record<string, Segment[]> = {
   ".": DOT,
 };
 
-const drawIcon = (glucose?: Glucose): string => {
+const drawIcon = (params?: { glucose: Glucose; unit: Unit }): string => {
   return `
   canvas = document.createElement("canvas");
   canvas.width = 32;
   canvas.height = 32;
   ctx = canvas.getContext("2d");
-  ${toPath(glucose)}
-  ${toSegmentss(glucose)
-    .map((segments, i) =>
-      drawDigit(segments, { cols: [1 + i * 12, 7 + i * 12], rows: [1, 11, 22] })
+  ${toPath(params)}
+  ${toDigits(params)
+    .map((digit, i) =>
+      drawDigit(digit, { cols: [1 + i * 12, 7 + i * 12], rows: [1, 11, 22] })
     )
     .join("\n")}
   canvas.toDataURL();
   `;
 };
 
-const toSegmentss = (glucose?: Glucose): Segment[][] => {
-  if (!glucose) return EMPTY;
-  if (!glucose.value) return EMPTY;
-  return String(glucose.value)
+const toDigits = (params?: { glucose: Glucose; unit: Unit }): Digit[] => {
+  if (!params) return EMPTY;
+  if (!params.glucose.value) return EMPTY;
+  return String(toConvertedValue(params.glucose.value, params.unit))
     .split("")
-    .map((x) => SEGMENTS_BY_CHAR[x] || []);
+    .map((x) => DIGIT_BY_CHAR[x] || []);
 };
 
-const toPath = (glucose?: Glucose): string => {
-  if (!glucose) return "";
+const toConvertedValue = (value: number, unit: Unit): number => {
+  switch (unit) {
+    case "mg/dL":
+      return value;
+    case "mmol/L":
+      return +(value / 18).toFixed(1);
+  }
+};
+
+const toPath = (params?: { glucose: Glucose; unit: Unit }): string => {
+  if (!params) return "";
 
   return (
     `
@@ -675,7 +683,7 @@ const toPath = (glucose?: Glucose): string => {
     ctx.beginPath();
     ctx.lineWidth = 3;
   ` +
-    trendPath(glucose) +
+    trendPath(params.glucose) +
     `
     ctx.closePath();
     ctx.stroke();
@@ -753,29 +761,32 @@ const trendPath = (glucose: Glucose): string => {
   }
 };
 
-const setWatcher = (glucose?: Glucose) => {
-  setText(glucose);
-  setImage(glucose);
+const setWatcher = (params?: { glucose: Glucose; unit: Unit }) => {
+  setText(params);
+  setImage(params);
 };
 
-const setText = (glucose?: Glucose) => {
+const setText = (params?: { glucose: Glucose; unit: Unit }) => {
   if (!tray) return;
-  const title = glucose
-    ? `${glucose.value} ${trendToIcon(glucose.trend)}`
-    : "---";
+  const value =
+    params && params.glucose.value
+      ? `${toConvertedValue(params.glucose.value, params.unit)} ${trendToIcon(
+          params.glucose.trend
+        )}`
+      : "---";
   if (process.platform === "darwin") {
-    tray.setTitle(title);
+    tray.setTitle(value);
     tray.setToolTip("DexTop");
   } else {
-    tray.setToolTip(title);
+    tray.setToolTip(`DexTop ${value}`);
   }
 };
 
-const setImage = (glucose?: Glucose) => {
+const setImage = (params?: { glucose: Glucose; unit: Unit }) => {
   if (process.platform !== "win32") return;
   if (!preferences) return;
   preferences.webContents
-    .executeJavaScript(drawIcon(glucose))
+    .executeJavaScript(drawIcon(params))
     .then((dataUrl) => {
       const icon = nativeImage.createFromDataURL(dataUrl);
       if (!tray) return;
@@ -822,6 +833,7 @@ const retrieveSession = async (preferences: BrowserWindow) => {
   if (!sessionJson) return;
   const session = JSON.parse(sessionJson);
   state = {
+    ...state,
     ...session,
     password: decryptOr(session.password, ""),
   };

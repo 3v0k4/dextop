@@ -1,5 +1,6 @@
 import "./main.css";
 import spinnerPath from "./images/spinner.gif";
+import type { Region, Unit } from "./index";
 
 const spinner = document.querySelector("#spinner");
 if (!(spinner instanceof HTMLImageElement)) throw new Error("Image not found");
@@ -26,6 +27,14 @@ if (!(us instanceof HTMLInputElement)) throw new Error("Us input not found");
 const eu = document.querySelector("#eu");
 if (!(eu instanceof HTMLInputElement)) throw new Error("Eu input not found");
 
+const mmol = document.querySelector("#mmolL");
+if (!(mmol instanceof HTMLInputElement))
+  throw new Error("mmol/L input not found");
+
+const mgdl = document.querySelector("#mgdL");
+if (!(mgdl instanceof HTMLInputElement))
+  throw new Error("mg/dL input not found");
+
 const error = document.querySelector("#error");
 if (!(error instanceof HTMLParagraphElement))
   throw new Error("Error paragraph not found");
@@ -38,16 +47,28 @@ form.addEventListener("submit", async (event) => {
     email: String(formData.get("email")),
     password: String(formData.get("password")),
     region: parseRegion(String(formData.get("region"))),
+    unit: parseUnit(String(formData.get("unit"))),
   };
   await window.versions.start(data);
 });
 
-const parseRegion = (region: string): "us" | "eu" | "" => {
+const parseRegion = (region: string): Region | "" => {
   switch (region) {
     case "us":
       return "us";
     case "eu":
       return "eu";
+    default:
+      return "";
+  }
+};
+
+const parseUnit = (unit: string): Unit | "" => {
+  switch (unit) {
+    case "mg/dL":
+      return "mg/dL";
+    case "mmol/L":
+      return "mmol/L";
     default:
       return "";
   }
@@ -86,21 +107,42 @@ const selectRegion = (region: "us" | "eu" | "") => {
       eu.checked = true;
       return;
     }
+    case "": {
+      return;
+    }
   }
 };
 
-const { email, region, password } = window.versions.state;
+const selectUnit = (unit: Unit | "") => {
+  switch (unit) {
+    case "mg/dL": {
+      mgdl.checked = true;
+      return;
+    }
+    case "mmol/L": {
+      mmol.checked = true;
+      return;
+    }
+    case "": {
+      return;
+    }
+  }
+};
+
+const { email, region, password, unit } = window.versions.state;
 
 fillEmail(email);
 fillPassword(password);
 selectRegion(region);
+selectUnit(unit);
 
-window.versions.onSession((_, { email, region, password }) => {
+window.versions.onSession((_, { email, region, password, unit }) => {
   fillEmail(email);
   fillPassword(password);
   selectRegion(region);
+  selectUnit(unit);
 
-  if (email !== "" && password !== "" && region !== "") {
+  if (email !== "" && password !== "" && region !== "" && unit !== "") {
     submit.click();
   }
 });
