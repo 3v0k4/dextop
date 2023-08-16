@@ -376,8 +376,21 @@
       update();
       setInterval(update, 5000);
 
-      fetch('https://api.github.com/repos/3v0k4/dextop/releases/latest')
-        .then(response => response.json())
+      //fetch('https://api.github.com/repos/3v0k4/dextop/releases/latest')
+        //.then(response => response.json())
+      Promise.resolve({
+        name: "v0.8.0",
+        assets: [
+          {
+            content_type: "application/x-apple-diskimage",
+            browser_download_url: "https://github.com/3v0k4/dextop/releases/download/v0.8.0/DexTop-0.8.0-x64.dmg",
+          },
+          {
+            content_type: "application/x-msdos-program",
+            browser_download_url: "https://github.com/3v0k4/dextop/releases/download/v0.8.0/DexTop-0.8.0.Setup.exe",
+          },
+        ]
+      })
         .then(json => {
           versions.forEach(version => version.innerText = `(version ${json.name.slice(1)})`);
 
