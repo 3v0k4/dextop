@@ -416,17 +416,17 @@
       //fetch('https://api.github.com/repos/3v0k4/dextop/releases/latest')
         //.then(response => response.json())
       Promise.resolve({
-        name: "v0.9.0",
+        name: "v0.9.1",
         draft: false,
         prerelease: false,
         assets: [
           {
             content_type: "application/x-apple-diskimage",
-            browser_download_url: "https://github.com/3v0k4/dextop/releases/download/v0.9.0/DexTop-0.9.0-x64.dmg",
+            browser_download_url: "https://github.com/3v0k4/dextop/releases/download/v0.9.1/DexTop-0.9.1-x64.dmg",
           },
           {
             content_type: "application/x-msdos-program",
-            browser_download_url: "https://github.com/3v0k4/dextop/releases/download/v0.9.0/DexTop-0.9.0.Setup.exe",
+            browser_download_url: "https://github.com/3v0k4/dextop/releases/download/v0.9.1/DexTop-0.9.1.Setup.exe",
           },
         ]
       })
@@ -444,6 +444,21 @@
       //fetch('https://api.github.com/repos/3v0k4/dextop/releases')
         //.then(response => response.json())
       Promise.resolve([
+        {
+          name: "v0.9.0",
+          draft: false,
+          prerelease: false,
+          assets: [
+            {
+              content_type: "application/x-apple-diskimage",
+              browser_download_url: "https://github.com/3v0k4/dextop/releases/download/v0.9.0/DexTop-0.9.0-x64.dmg",
+            },
+            {
+              content_type: "application/x-msdos-program",
+              browser_download_url: "https://github.com/3v0k4/dextop/releases/download/v0.9.0/DexTop-0.9.0.Setup.exe",
+            },
+          ]
+        },
         {
           name: "v0.8.1",
           draft: false,
