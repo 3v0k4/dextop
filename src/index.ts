@@ -166,7 +166,7 @@ const showPreferences = () => {
     icon: "src/images/icon.png",
     width: 350,
     height: 350,
-    movable: false,
+    movable: true,
     minimizable: false,
     maximizable: false,
     alwaysOnTop: true,
@@ -210,12 +210,10 @@ const showPreferences = () => {
     if (!preferences) return;
 
     const positioner = new Positioner(preferences);
-    const { x, y } = tray
-      ? positioner.calculate(
-          process.platform === "darwin" ? "trayCenter" : "trayBottomCenter",
-          tray.getBounds()
-        )
-      : { x: 0, y: 0 };
+    const { x, y } =
+      tray && process.platform === "darwin"
+        ? positioner.calculate("trayCenter", tray.getBounds())
+        : positioner.calculate("center");
     preferences.setPosition(x, y);
 
     preferences.show();
