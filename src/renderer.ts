@@ -27,6 +27,9 @@ if (!(us instanceof HTMLInputElement)) throw new Error("Us input not found");
 const eu = document.querySelector("#eu");
 if (!(eu instanceof HTMLInputElement)) throw new Error("Eu input not found");
 
+const apac = document.querySelector("#apac");
+if (!(apac instanceof HTMLInputElement)) throw new Error("APAC input not found");
+
 const mmol = document.querySelector("#mmolL");
 if (!(mmol instanceof HTMLInputElement))
   throw new Error("mmol/L input not found");
@@ -58,6 +61,8 @@ const parseRegion = (region: string): Region | "" => {
       return "us";
     case "eu":
       return "eu";
+    case "apac":
+      return "apac";
     default:
       return "";
   }
@@ -97,7 +102,7 @@ const fillPassword = (password: string) => {
   passwordInput.value = password;
 };
 
-const selectRegion = (region: "us" | "eu" | "") => {
+const selectRegion = (region: "us" | "eu" | "apac" | "") => {
   switch (region) {
     case "us": {
       us.checked = true;
@@ -105,6 +110,10 @@ const selectRegion = (region: "us" | "eu" | "") => {
     }
     case "eu": {
       eu.checked = true;
+      return;
+    }
+    case "apac": {
+      apac.checked = true;
       return;
     }
     case "": {

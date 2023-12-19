@@ -43,7 +43,7 @@ const CONTACT_URL = "http://contact.getdextop.com";
 
 updateElectronApp();
 
-export type Region = "us" | "eu";
+export type Region = "us" | "eu" | "apac";
 export type Session = {
   email: string;
   password: string;
@@ -325,12 +325,18 @@ const getGlucose = async (
 ): Promise<Response<Glucose> | { _kind: "no-glucose-in-5-minutes" }> => {
   const { email, password, region } = session;
   if (region === "") return { _kind: "fail" };
-  const accountId = await getAccountId({ email, password, host: host(region) });
+  const accountId = await getAccountId({
+    email,
+    password,
+    host: host(region),
+    applicationId: applicationId(region),
+  });
   if (accountId._kind !== "ok") return accountId;
   const sessionId = await getSessionId({
     accountId: accountId.data,
     password,
     host: host(region),
+    applicationId: applicationId(region),
   });
   if (!sessionId) return { _kind: "fail" };
   const [glucose] = await getEstimatedGlucoseValues({
@@ -363,21 +369,21 @@ const trendToIcon = (trend: string) => {
   }
 };
 
-const DEXCOM_APPLICATION_ID = "d89443d2-327c-4a6f-89e5-496bbb0317db";
-
 const getAccountId = async ({
   email,
   password,
   host,
+  applicationId,
 }: {
   email: string;
   password: string;
   host: string;
+  applicationId: string;
 }): Promise<Response<string>> => {
   const body = {
     accountName: email,
     password,
-    applicationId: DEXCOM_APPLICATION_ID,
+    applicationId,
   };
   const url = `https://${host}/ShareWebServices/Services/General/AuthenticatePublisherAccount`;
   const response = await post(body, url);
@@ -391,15 +397,17 @@ const getSessionId = async ({
   accountId,
   password,
   host,
+  applicationId,
 }: {
   accountId: string;
   password: string;
   host: string;
+  applicationId: string;
 }): Promise<string | null> => {
   const body = {
     accountId,
     password,
-    applicationId: DEXCOM_APPLICATION_ID,
+    applicationId,
   };
   const url = `https://${host}/ShareWebServices/Services/General/LoginPublisherAccountById`;
   const response = await post(body, url);
@@ -503,6 +511,19 @@ const host = (region: Exclude<Region, "">): string => {
       return "share2.dexcom.com";
     case "eu":
       return "shareous1.dexcom.com";
+    case "apac":
+      return "share.dexcom.jp";
+  }
+};
+
+const applicationId = (region: Exclude<Region, "">): string => {
+  switch (region) {
+    case "us":
+      return "d89443d2-327c-4a6f-89e5-496bbb0317db";
+    case "eu":
+      return "d89443d2-327c-4a6f-89e5-496bbb0317db";
+    case "apac":
+      return "d8665ade-9673-4e27-9ff6-92db4ce13d13";
   }
 };
 
