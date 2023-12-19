@@ -13,7 +13,7 @@ import {
 } from "electron";
 import Positioner from "electron-positioner";
 import AutoLaunch from "auto-launch";
-import updateElectronApp from "update-electron-app";
+import { updateElectronApp } from "update-electron-app";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // NEEDS TO BE THE FIRST THING IN THE FILE
