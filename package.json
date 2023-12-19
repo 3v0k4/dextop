@@ -38,7 +38,7 @@
     "electron": "^26.0.0",
     "eslint": "^8.56.0",
     "eslint-plugin-import": "^2.29.1",
-    "fork-ts-checker-webpack-plugin": "^7.2.13",
+    "fork-ts-checker-webpack-plugin": "^9.0.2",
     "node-loader": "^2.0.0",
     "postcss": "^8.4.32",
     "postcss-loader": "^7.3.3",
