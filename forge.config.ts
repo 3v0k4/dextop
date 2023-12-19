@@ -38,7 +38,6 @@ const config: ForgeConfig = {
     ...(credentials
       ? {
           osxNotarize: {
-            tool: "notarytool",
             appleId,
             appleIdPassword,
             teamId,
