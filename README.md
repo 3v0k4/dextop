@@ -4,4 +4,4 @@ Download the app at [getdextop.com](https://getdextop.com).
 
 ## Contributors ❤️
 
-- [@johanok](https://github.com/johanok): APAC support
+- [@johanokl](https://github.com/johanokl): APAC support
