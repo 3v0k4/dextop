@@ -487,7 +487,7 @@ const post = async (
     } else {
       return { _kind: "error", data: json };
     }
-  } catch (error) {
+  } catch (_error) {
     return { _kind: "fail" };
   }
 };
@@ -816,7 +816,7 @@ const setImage = (params?: { glucose: Glucose; unit: Unit }) => {
 const encryptOr = (string: string, or: string): string => {
   try {
     return safeStorage.encryptString(string).toString("base64");
-  } catch (Error) {
+  } catch (_error) {
     return or;
   }
 };
@@ -827,7 +827,7 @@ const decryptOr = (string: string | undefined, or: string): string => {
 
   try {
     return safeStorage.decryptString(buffer);
-  } catch (Error) {
+  } catch (_error) {
     return or;
   }
 };
