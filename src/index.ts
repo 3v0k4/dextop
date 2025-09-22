@@ -93,7 +93,7 @@ app.on("web-contents-created", (_event, contents) => {
   contents.setWindowOpenHandler(({ url }) => {
     if (
       [new URL(CONTACT_URL).origin, new URL(DONATE_URL).origin].includes(
-        new URL(url).origin
+        new URL(url).origin,
       )
     ) {
       setImmediate(() => {
@@ -131,7 +131,7 @@ app.whenReady().then(() => {
 });
 
 const menuTemplate = (
-  label?: string
+  label?: string,
 ): Parameters<typeof Menu.buildFromTemplate>[0] => {
   const DEFAULT: MenuItemConstructorOptions[] = [
     { label: "Preferences", click: showPreferences },
@@ -196,7 +196,7 @@ const showPreferences = () => {
           .then(() => {
             if (!preferences) return;
             return preferences.webContents.executeJavaScript(
-              "localStorage.setItem('alreadyRun', true)"
+              "localStorage.setItem('alreadyRun', true)",
             );
           });
       });
@@ -264,7 +264,7 @@ const start = async (event: Electron.IpcMainInvokeEvent, session: Session) => {
           region: session.region,
           unit: session.unit,
           password: encryptOr(session.password, ""),
-        })}')`
+        })}')`,
       );
       return;
     case "wrong-credentials":
@@ -283,7 +283,7 @@ const start_ = async (session: Session): Promise<Event> => {
   switch (glucose._kind) {
     case "ok": {
       const contextMenu = Menu.buildFromTemplate(
-        menuTemplate(`Last glucose at ${glucose.data.timestamp}`)
+        menuTemplate(`Last glucose at ${glucose.data.timestamp}`),
       );
       tray.setContextMenu(contextMenu);
       // const RED_FG = '\033[31;1m';
@@ -293,7 +293,7 @@ const start_ = async (session: Session): Promise<Event> => {
     }
     case "no-glucose-in-5-minutes": {
       const contextMenu = Menu.buildFromTemplate(
-        menuTemplate(`No glucose in the last 5 minutes..`)
+        menuTemplate(`No glucose in the last 5 minutes..`),
       );
       tray.setContextMenu(contextMenu);
       setWatcher();
@@ -321,7 +321,7 @@ const start_ = async (session: Session): Promise<Event> => {
 };
 
 const getGlucose = async (
-  session: Session
+  session: Session,
 ): Promise<Response<Glucose> | { _kind: "no-glucose-in-5-minutes" }> => {
   const { email, password, region } = session;
   if (region === "") return { _kind: "fail" };
@@ -471,7 +471,7 @@ const getEstimatedGlucoseValues = async ({
 
 const post = async (
   body: Record<PropertyKey, unknown>,
-  url: string
+  url: string,
 ): Promise<Response> => {
   try {
     const result = await fetch(url, {
@@ -538,7 +538,7 @@ type Segment =
 
 const drawDigit = (
   digit: Digit,
-  coords: { cols: [number, number]; rows: [number, number, number] }
+  coords: { cols: [number, number]; rows: [number, number, number] },
 ): string => {
   if (digit.length === 0) return "";
 
@@ -668,7 +668,7 @@ const drawIcon = (params?: { glucose: Glucose; unit: Unit }): string => {
   ${toPath(params)}
   ${toDigits(params)
     .map((digit, i) =>
-      drawDigit(digit, { cols: [1 + i * 12, 7 + i * 12], rows: [1, 11, 22] })
+      drawDigit(digit, { cols: [1 + i * 12, 7 + i * 12], rows: [1, 11, 22] }),
     )
     .join("\n")}
   canvas.toDataURL();
@@ -790,7 +790,7 @@ const setText = (params?: { glucose: Glucose; unit: Unit }) => {
   const value =
     params && params.glucose.value
       ? `${toConvertedValue(params.glucose.value, params.unit)} ${trendToIcon(
-          params.glucose.trend
+          params.glucose.trend,
         )}`
       : "---";
   if (process.platform === "darwin") {
@@ -835,7 +835,7 @@ const decryptOr = (string: string | undefined, or: string): string => {
 const retrieveSession = async (preferences: BrowserWindow) => {
   const shownSafeStorageWarning =
     await preferences.webContents.executeJavaScript(
-      "localStorage.getItem('shownSafeStorageWarning')"
+      "localStorage.getItem('shownSafeStorageWarning')",
     );
   if (!shownSafeStorageWarning)
     await dialog.showMessageBox({
@@ -844,10 +844,10 @@ const retrieveSession = async (preferences: BrowserWindow) => {
         "DexTop will save your password in safe storage. You may need to accept a permissions prompt.",
     });
   await preferences.webContents.executeJavaScript(
-    "localStorage.setItem('shownSafeStorageWarning', true)"
+    "localStorage.setItem('shownSafeStorageWarning', true)",
   );
   const sessionJson = await preferences.webContents.executeJavaScript(
-    "localStorage.getItem('session')"
+    "localStorage.getItem('session')",
   );
   if (!sessionJson) return;
   const session = JSON.parse(sessionJson);
