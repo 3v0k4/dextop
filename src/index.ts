@@ -78,7 +78,7 @@ let isAppQuitting = false;
 let isFirstLaunch = true;
 
 if (process.platform === "darwin") {
-  app.dock.hide();
+  app.dock?.hide();
 }
 
 const autoLaunch = new AutoLaunch({
@@ -237,7 +237,8 @@ const hide = (event?: Electron.Event) => {
   isAppQuitting = false;
 };
 
-const validateSender = (frame: Electron.WebFrameMain) => {
+const validateSender = (frame: Electron.WebFrameMain | null) => {
+  if (frame === null) return false;
   return new URL(frame.url).host === new URL(MAIN_WINDOW_WEBPACK_ENTRY).host;
 };
 
