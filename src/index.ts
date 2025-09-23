@@ -296,7 +296,9 @@ const start_ = async (session: Session): Promise<Event> => {
         glucose.data.date.getHours(),
         glucose.data.date.getMinutes(),
         glucose.data.date.getSeconds(),
-      ].join(":");
+      ]
+        .map((x) => x.toString().padStart(2, "0"))
+        .join(":");
       const contextMenu = Menu.buildFromTemplate(
         menuTemplate(`Last glucose at ${timestamp}`),
       );
