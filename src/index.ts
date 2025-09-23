@@ -57,8 +57,8 @@ export type Event =
   | { _kind: "error" };
 
 type Glucose = {
-  timestamp: string;
-  value: number | null;
+  date: Date;
+  value: number;
   trend: string;
 };
 
@@ -255,7 +255,7 @@ const start = async (event: Electron.IpcMainInvokeEvent, session: Session) => {
   const response = await start_(session);
   switch (response._kind) {
     case "ok":
-      loopId = setInterval(() => start_(session), 1000 * 60);
+      loopId = setInterval(() => start_(session), 1000 * 5);
       hide();
       state = { ...state, ...session };
       preferences.webContents.send("startResponseReceived", response);
@@ -277,14 +277,28 @@ const start = async (event: Electron.IpcMainInvokeEvent, session: Session) => {
   }
 };
 
+let lastGlucose: Glucose | null = null;
+
 const start_ = async (session: Session): Promise<Event> => {
   if (!tray) return { _kind: "error" };
+  if (
+    lastGlucose !== null &&
+    new Date().getTime() - lastGlucose.date.getTime() <
+      5 * 60 * 1000 + 10 * 1000 // 310 seconds
+  )
+    return { _kind: "ok" };
 
   const glucose = await getGlucose(session);
   switch (glucose._kind) {
     case "ok": {
+      lastGlucose = glucose.data;
+      const timestamp = [
+        glucose.data.date.getHours(),
+        glucose.data.date.getMinutes(),
+        glucose.data.date.getSeconds(),
+      ].join(":");
       const contextMenu = Menu.buildFromTemplate(
-        menuTemplate(`Last glucose at ${glucose.data.timestamp}`),
+        menuTemplate(`Last glucose at ${timestamp}`),
       );
       tray.setContextMenu(contextMenu);
       // const RED_FG = '\033[31;1m';
@@ -450,7 +464,7 @@ const getEstimatedGlucoseValues = async ({
   //   "Trend":"Flat"
   // }]
   const data = response.data as {
-    Value: number;
+    Value: number | null;
     Trend: string;
     DT: string;
   }[];
@@ -459,12 +473,13 @@ const getEstimatedGlucoseValues = async ({
 
   return data
     .map((glucose) => {
-      const timestamp = convertToLocalTime(glucose.DT);
-      if (!timestamp) return null;
+      if (!glucose.Value) return null;
+      const date = convertToLocalTime(glucose.DT);
+      if (!date) return null;
       return {
         value: glucose.Value,
         trend: glucose.Trend,
-        timestamp: timestamp,
+        date: date,
       };
     })
     .filter(notNull);
@@ -493,17 +508,12 @@ const post = async (
   }
 };
 
-const convertToLocalTime = (dt: string): string | null => {
-  const [_1, epochWithTz] = dt.match(/Date\((.+)\)/) || [];
-  if (!epochWithTz) return null;
-  const [_2, epoch, sign, offset] = epochWithTz.match(/(\d+)([-+])(\d+)/) || [];
-  if (!epoch || !sign || !offset) return null;
-  const date = new Date(parseInt(epoch, 10));
-  const iso =
-    date.toISOString().slice(0, -1) + (sign === "-" ? "+" : "-") + offset;
-  const local = new Date(iso).toISOString().slice(0, -1) + `${sign}${offset}`;
-  const [_3, timestamp] = local.match(/.+T(\d\d:\d\d):.+/) || [];
-  return timestamp || null;
+const convertToLocalTime = (timestamp: string): Date | null => {
+  const [_, epochString] = timestamp.match(/Date\((\d{13})[+-]\d{4}\)/) || [];
+  if (!epochString) return null;
+  const epoch = parseInt(epochString, 10);
+  if (isNaN(epoch)) return null;
+  return new Date(epoch);
 };
 
 const host = (region: Exclude<Region, "">): string => {
@@ -678,7 +688,6 @@ const drawIcon = (params?: { glucose: Glucose; unit: Unit }): string => {
 
 const toDigits = (params?: { glucose: Glucose; unit: Unit }): Digit[] => {
   if (!params) return EMPTY;
-  if (!params.glucose.value) return EMPTY;
   return String(toConvertedValue(params.glucose.value, params.unit))
     .split("")
     .map((x) => DIGIT_BY_CHAR[x] || []);
@@ -788,12 +797,11 @@ const setWatcher = (params?: { glucose: Glucose; unit: Unit }) => {
 
 const setText = (params?: { glucose: Glucose; unit: Unit }) => {
   if (!tray) return;
-  const value =
-    params && params.glucose.value
-      ? `${toConvertedValue(params.glucose.value, params.unit)} ${trendToIcon(
-          params.glucose.trend,
-        )}`
-      : "---";
+  const value = params
+    ? `${toConvertedValue(params.glucose.value, params.unit)} ${trendToIcon(
+        params.glucose.trend,
+      )}`
+    : "---";
   if (process.platform === "darwin") {
     tray.setTitle(value);
     tray.setToolTip("DexTop");
