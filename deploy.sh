@@ -16,9 +16,9 @@ npx tailwindcss -i input.css -o dist/output.css --minify
 cp -rf public/* dist/
 sed -i '' -e "s/VERSION/$(date +%s)/g" dist/index.html
 
-aws s3 sync ./dist s3://getdextop.com
+aws s3 sync ./dist s3://dextop.odone.me
 aws cloudfront create-invalidation \
-    --distribution-id E3I9B0BMZOFJZW \
+    --distribution-id E224LQI4QULYWJ \
     --paths "/*"
 
 cd -

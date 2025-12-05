@@ -1,6 +1,6 @@
 # DexTop
 
-Download the app at [getdextop.com](https://getdextop.com).
+Download the app at [dextop.odone.me](https://dextop.odone.me).
 
 ## Contributors ❤️
 

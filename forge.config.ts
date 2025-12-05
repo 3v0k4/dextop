@@ -48,7 +48,7 @@ const config: ForgeConfig = {
   makers: [
     // Windows
     new MakerSquirrel({
-      iconUrl: "https://getdextop.com/images/icon.ico",
+      iconUrl: "https://dextop.odone.me/images/icon.ico",
       setupIcon: "src/images/icon.ico",
       authors: "Riccardo Odone",
     }),

@@ -6,7 +6,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 // import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 import { Construct } from "constructs";
 
-const DOMAIN_NAME = "getdextop.com";
+const DOMAIN_NAME = "dextop.odone.me";
 // const ASSETS_PATH = "../website/dist";
 
 export class CdkStack extends cdk.Stack {
@@ -25,7 +25,7 @@ export class CdkStack extends cdk.Stack {
       {
         domainName: DOMAIN_NAME,
         validation: acm.CertificateValidation.fromDns(),
-      }
+      },
     );
 
     const cloudfrontFunction = new cloudfront.Function(
@@ -44,9 +44,9 @@ export class CdkStack extends cdk.Stack {
             }
 
             return request;
-          }`
+          }`,
         ),
-      }
+      },
     );
 
     const distribution = new cloudfront.Distribution(
@@ -67,7 +67,7 @@ export class CdkStack extends cdk.Stack {
             },
           ],
         },
-      }
+      },
     );
 
     // new s3deploy.BucketDeployment(this, `${DOMAIN_NAME}-s3-deploy`, {
@@ -77,7 +77,7 @@ export class CdkStack extends cdk.Stack {
     // });
 
     new cdk.CfnOutput(this, "cloudfront-distribution-domain", {
-      value: distribution.distributionId,
+      value: distribution.domainName,
     });
   }
 }

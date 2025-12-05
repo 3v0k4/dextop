@@ -37,9 +37,9 @@ const PRODUCTION_CONTENT_SECURITY_POLICY = [
   "font-src fonts.gstatic.com",
 ].join("; ");
 
-const WEBSITE_URL = "https://getdextop.com";
-const DONATE_URL = "http://tips.getdextop.com";
-const CONTACT_URL = "http://contact.getdextop.com";
+const WEBSITE_URL = "https://dextop.odone.me";
+const DONATE_URL = "http://tips.odone.me";
+const CONTACT_URL = "http://contact-dextop.odone.me";
 
 updateElectronApp();
 
